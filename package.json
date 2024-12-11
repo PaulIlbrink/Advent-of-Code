@@ -1,0 +1,17 @@
+{
+  "name": "advent-of-code",
+  "type": "module",
+  "module": "runner.ts",
+  "scripts": {
+    "clean": "if exist dist (rmdir /s /q dist)",
+    "run:day": "bun runner.ts 2024 1",
+    "run:year": "bun runner.ts 2024",
+    "start": "bun runner.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
