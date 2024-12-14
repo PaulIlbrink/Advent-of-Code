@@ -1,86 +1,87 @@
-export function solve(input: string): string {
-  const lines = input.split("\n").map((line) => line.trim());
+type ReportStats = {
+  safe: number;
+  safeAfterDampening: number;
+};
 
-  const reports = lines.map((line) => line.split(/\s+/).map(Number));
+type UnsafeLevel = {
+  index: number;
+  reason: string;
+};
 
-  const isSafeLevel = (
-    level: number,
-    prevLevel: number,
-    state: { increasing: boolean }
-  ) => {
-    const change = level - prevLevel;
+const checkLevels = (levels: number[]): number => {
+  if (levels.length < 2) return -1;
 
-    // no change
-    if (change === 0) return false;
+  let previous = levels[0];
 
-    // change too big
-    if (Math.abs(change) > 3) return false;
+  // Establish the required trend from first two numbers
+  const trend = Math.sign(levels[1] - previous);
 
-    // direction change
-    if (level - prevLevel > 0 !== state.increasing) {
-      state.increasing = !state.increasing;
-      return false;
+  if (trend === 0) return 1; // No stagnant sequences allowed
+
+  for (let i = 1; i < levels.length; i++) {
+    const level = levels[i];
+    const direction = Math.sign(level - previous);
+
+    // Must maintain same direction throughout
+    if (direction !== trend) {
+      // it's not at the beginning, so removing the previous value will still fail
+      if (i > 2) {
+        return i;
+      }
+
+      // remove previous item
+      return i - 1;
+    }
+    const diff = Math.abs(level - previous);
+
+    // Difference must be between 1 and 3
+    if (diff > 3) {
+      return i;
     }
 
-    return true;
-  };
+    previous = level;
+  }
 
-  type ReportStats = {
-    safe: number;
-    safeAfterDampening: number;
-  };
+  return -1;
+};
 
-  /* --------------------------------- Part 1 & 2  --------------------------------- */
-  const { safe, safeAfterDampening } = reports.reduce<ReportStats>(
-    (total: ReportStats, levels, index) => {
-      // nothing to compare, so all fine
-      if (levels.length < 2) {
+const dampenLevels = <T>(levels: T[], index: number): T[] => {
+  return [...levels.slice(0, index), ...levels.slice(index + 1)];
+};
+
+export function solve(input: string): string {
+  const lines = input.split("\n").map((line) => line.trim());
+  const reports = lines.map((line) => line.split(/\s+/).map(Number));
+
+  const results = reports.reduce<ReportStats>(
+    (total, levels) => {
+      const unsafeIndex = checkLevels(levels);
+
+      // all fine
+      if (unsafeIndex === -1) {
         total.safe++;
         total.safeAfterDampening++;
         return total;
       }
 
-      let prevLevel = levels[0];
-      let level: number;
-      const state = { increasing: levels[1] - levels[0] > 0 };
-
-      const unsafeIndexes: number[] = [];
-      for (let i = 1; i < levels.length; i++) {
-        level = levels[i];
-
-        if (!isSafeLevel(level, prevLevel, state)) {
-          unsafeIndexes.push(i);
-        }
-      }
-
-      // unsafe for sure
-      if (unsafeIndexes.length > 2) {
-        return total;
-      }
-
-      // safe for sure
-      if (unsafeIndexes.length === 0) {
+      // when last possible item fails, it's becomes safe when removed
+      if (unsafeIndex - 1 === levels.length) {
         total.safeAfterDampening++;
-        total.safe++;
         return total;
       }
 
-      // only one mismatch found
-      if (unsafeIndexes.length === 1) {
-        const index = unsafeIndexes[0];
-
-        // first or last
-        if (index === 1 || index === levels.length - 1) {
-          total.safeAfterDampening++;
-        }
-
-        return total;
+      // Try removing the problematic or the one before it
+      if (
+        checkLevels(dampenLevels(levels, unsafeIndex - 1)) === -1 ||
+        checkLevels(dampenLevels(levels, unsafeIndex)) === -1
+      ) {
+        total.safeAfterDampening++;
       }
 
       return total;
     },
-    { safe: 0, safeAfterDampening: 0 } as ReportStats
+    { safe: 0, safeAfterDampening: 0 }
   );
 
-  return `From the total of ${reports.length} reports ${safe} are safe and ${safeAfterDampening} are safe after dampening`;
+  return `From the total of ${reports.length} reports only ${results.safe} are considered safe whilst ${results.safeAfterDampening} are safe after dampening.`;
 }
