@@ -9,7 +9,11 @@ const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2024";
 const dayArg = args.find((arg) => /^\d{1,2}$/.test(arg));
 const isBenchmark = args.includes("--benchmark");
 
-console.log(`\nAdvent of code solutions\n`);
+console.log(
+  `\n${chalk.red("Advent")} ${chalk.green("of")} ${chalk.red(
+    "code"
+  )} ${chalk.green("solutions")}\n`
+);
 
 async function runSolution(year: string, day?: string, benchmark = false) {
   const basePath = resolve(__dirname, year);
@@ -47,7 +51,7 @@ async function runSolution(year: string, day?: string, benchmark = false) {
         "Time Taken:",
         chalk.yellow(
           benchmark
-            ? `${avgTime.toFixed(2)}ms (avg over ${iterations} runs)`
+            ? `${avgTime.toFixed(2)}ms (avg over ${iterations} runs)\n`
             : `${elapsedTimes[0].toFixed(2)}ms\n`
         )
       );
