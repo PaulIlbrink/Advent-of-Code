@@ -1,3 +1,5 @@
+import chalk from "chalk";
+
 type ReportStats = {
   safe: number;
   safeAfterDampening: number;
@@ -82,6 +84,11 @@ export function solve(input: string): string {
     },
     { safe: 0, safeAfterDampening: 0 }
   );
-
-  return `From the total of ${reports.length} reports only ${results.safe} are considered safe whilst ${results.safeAfterDampening} are safe after dampening.`;
+  return `From the total of ${
+    reports.length
+  } reports only ${chalk.underline.white(
+    results.safe
+  )} are considered safe whilst ${chalk.underline.yellow(
+    results.safeAfterDampening
+  )} are safe after dampening.`;
 }

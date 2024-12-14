@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import { readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { performance } from "perf_hooks";
@@ -27,8 +28,8 @@ async function runSolution(year: string, day?: string) {
       const elapsedTime = endTime - startTime;
       totalElapsedTime += elapsedTime;
 
-      console.log(`Day ${d}:`, result);
-      console.log(`Time Taken: ${elapsedTime.toFixed(2)}ms\n`);
+      console.log(`Day ${chalk.green(d)}:`, result);
+      console.log("Time Taken:", chalk.yellow(`${elapsedTime.toFixed(2)}ms\n`));
     } catch (error) {
       console.error(`Error running Day ${d}:`, error.message);
     }
@@ -36,9 +37,13 @@ async function runSolution(year: string, day?: string) {
 
   const totalEndTime = performance.now(); // End total timing
   console.log(
-    `Total Time Taken: ${(totalEndTime - totalStartTime).toFixed(2)}ms`
+    "Total Time Taken:",
+    chalk.dim(`${(totalEndTime - totalStartTime).toFixed(2)}ms`)
   );
-  console.log(`Total Processing Time: ${totalElapsedTime.toFixed(2)}ms\n`);
+  console.log(
+    "Total Processing Time:",
+    chalk.yellow(`${totalElapsedTime.toFixed(2)}ms\n`)
+  );
 }
 
 runSolution(year, day);

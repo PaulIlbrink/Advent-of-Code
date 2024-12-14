@@ -1,3 +1,5 @@
+import chalk from "chalk";
+
 export function solve(input: string): string {
   const lines = input.split("\n").map((line) => line.trim());
 
@@ -13,5 +15,5 @@ export function solve(input: string): string {
     return subTotal;
   }, 0);
 
-  return `The sum of all valid multiplications is ${totalSum}`;
+  return `The sum of all valid multiplications is ${chalk.underline.white(totalSum)}`;
 }
