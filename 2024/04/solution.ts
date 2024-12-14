@@ -18,11 +18,41 @@ export function solve(input: string): string {
   const topLeftDiagonals = new Map<number, string>();
   const topRightDiagonals = new Map<number, string>();
 
+  // part 2 solution
+  let xMasCount = 0;
+
+  const isXmas = (col: number, row: number, character: string): boolean => {
+    // check x-center
+    if (character !== "A") return false;
+
+    // a can't be on the outside
+    if (col < 1 || col >= colCount - 1 || row < 1 || row >= rowCount - 1)
+      return false;
+
+    // check the corners
+    const corners = [
+      lines[row - 1].charAt(col - 1),
+      lines[row - 1].charAt(col + 1),
+      lines[row + 1].charAt(col - 1),
+      lines[row + 1].charAt(col + 1),
+    ];
+    const [tl, tr, bl, br] = corners;
+
+    // corners must be either an M or S
+    if (corners.some((corner) => !/[MS]/.test(corner))) return false;
+
+    // opposite corners must be different
+    if (tl === br || tr === bl) return false;
+
+    return true;
+  };
+
   // now add the vertical ones
   for (let col = 0; col < colCount; col++) {
     let verticalLine = "";
     for (let row = 0; row < rowCount; row++) {
-      verticalLine += lines[row].charAt(col);
+      const character = lines[row].charAt(col);
+      verticalLine += character;
 
       // diagonal from Top Left
       const key = col - row;
@@ -38,6 +68,9 @@ export function solve(input: string): string {
         keyB,
         (topRightDiagonals.get(keyB) ?? "") + lines[row].charAt(col)
       );
+
+      // look for X-MAS
+      if (isXmas(col, row, character)) xMasCount++;
     }
     matrixLines.vertical.push(verticalLine);
   }
@@ -67,5 +100,7 @@ export function solve(input: string): string {
     return words;
   }, 0);
 
-  return `The ${colCount} x ${rowCount} matrix contains the word XMAS exactly ${chalk.underline.white(totalWords)} times.`;
+  return `The ${colCount} x ${rowCount} matrix contains the word XMAS ${chalk.underline.white(
+    totalWords
+  )} times, but only ${chalk.underline.yellow(xMasCount)} X-MAS'es were found.`;
 }
