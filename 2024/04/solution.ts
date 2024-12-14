@@ -62,10 +62,10 @@ export function solve(input: string): string {
 
   // Now let's check all possible lines for the amount of occurances of XMAS or SMAX.
   const totalWords = combinedLines.reduce((words, line) => {
-    words += line.match(/XMAS/)?.length ?? 0;
-    words += line.match(/SAMX/)?.length ?? 0;
+    words += line.match(/XMAS/g)?.length ?? 0;
+    words += line.match(/SAMX/g)?.length ?? 0;
     return words;
   }, 0);
 
-  return `The ${colCount}x${rowCount} matrix contains the word XMAS exactly ${totalWords} times.`;
+  return `The ${colCount} x ${rowCount} matrix contains the word XMAS exactly ${chalk.underline.white(totalWords)} times.`;
 }
