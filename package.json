@@ -8,7 +8,10 @@
     "run:year": "bun runner.ts 2024",
     "watch": "bun --watch runner.ts",
     "watch:day": "bun --watch runner.ts 2024 1",
-    "watch:year": "bun --watch runner.ts 2024"
+    "watch:year": "bun --watch runner.ts 2024",
+    "benchmark": "bun runner.ts 2024 --benchmark",
+    "benchmark:day": "bun runner.ts 2024 1 --benchmark",
+    "benchmark:year": "bun runner.ts 2024 --benchmark"
   },
   "devDependencies": {
     "@types/bun": "latest"

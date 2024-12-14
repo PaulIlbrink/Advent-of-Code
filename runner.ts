@@ -3,14 +3,22 @@ import { readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { performance } from "perf_hooks";
 
-const year = process.argv[2] || "2024";
-const day = process.argv[3];
+// Parse command-line arguments
+const args = process.argv.slice(2);
+const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2024";
+const dayArg = args.find((arg) => /^\d{1,2}$/.test(arg));
+const isBenchmark = args.includes("--benchmark");
 
-async function runSolution(year: string, day?: string) {
+console.log(`\nAdvent of code solutions\n`);
+
+async function runSolution(year: string, day?: string, benchmark = false) {
   const basePath = resolve(__dirname, year);
   const days = day ? [day.padStart(2, "0")] : readdirSync(basePath);
-  let totalStartTime = performance.now(); // Start total timing
+
+  let totalStartTime = performance.now();
   let totalElapsedTime = 0;
+
+  const iterations = benchmark ? 1000 : 1; // Number of repetitions for benchmarking
 
   for (const d of days) {
     const dayPath = resolve(basePath, d);
@@ -21,21 +29,35 @@ async function runSolution(year: string, day?: string) {
       const input = readFileSync(inputPath, "utf-8");
       const { solve } = await import(solutionPath);
 
-      const startTime = performance.now(); // Start timing for this solution
-      const result = solve(input);
-      const endTime = performance.now(); // End timing for this solution
+      let elapsedTimes: number[] = [];
 
-      const elapsedTime = endTime - startTime;
-      totalElapsedTime += elapsedTime;
+      for (let i = 0; i < iterations; i++) {
+        const startTime = performance.now();
+        solve(input);
+        const endTime = performance.now();
+        elapsedTimes.push(endTime - startTime);
+      }
 
+      const avgTime =
+        elapsedTimes.reduce((sum, t) => sum + t, 0) / elapsedTimes.length;
+
+      const result = solve(input); // Run once to get the actual result
       console.log(`Day ${chalk.green(d)}:`, result);
-      console.log("Time Taken:", chalk.yellow(`${elapsedTime.toFixed(2)}ms\n`));
+      console.log(
+        "Time Taken:",
+        chalk.yellow(
+          benchmark
+            ? `${avgTime.toFixed(2)}ms (avg over ${iterations} runs)`
+            : `${elapsedTimes[0].toFixed(2)}ms\n`
+        )
+      );
+      totalElapsedTime += avgTime;
     } catch (error) {
       console.error(`Error running Day ${d}:`, error.message);
     }
   }
 
-  const totalEndTime = performance.now(); // End total timing
+  const totalEndTime = performance.now();
   console.log(
     "Total Time Taken:",
     chalk.dim(`${(totalEndTime - totalStartTime).toFixed(2)}ms`)
@@ -46,4 +68,4 @@ async function runSolution(year: string, day?: string) {
   );
 }
 
-runSolution(year, day);
+runSolution(yearArg, dayArg, isBenchmark);
