@@ -3,17 +3,50 @@ import chalk from "chalk";
 export function solve(input: string): string {
   const lines = input.split("\n").map((line) => line.trim());
 
-  const totalSum = lines.reduce((subTotal: number, line: string, idx) => {
-    const mulPattern = /mul\((?<numberX>\d{1,3}),(?<numberY>\d{1,3})\)/g;
+  // check for multiplications
+  const mulPattern = /mul\((?<numberX>\d{1,3}),(?<numberY>\d{1,3})\)/g;
 
-    let mulMatch;
-    while ((mulMatch = mulPattern.exec(line)) !== null) {
-      const { numberX, numberY } = mulMatch.groups!;
-      subTotal += Number(numberX) * Number(numberY);
-    }
+  // check for do's and don'ts and their instructions
+  const conditionPattern =
+    /(?<condition>do(?:n't)?\(\))(?<instructions>.*?)(?=do(?:n't)?\(\)|$)/g;
 
-    return subTotal;
-  }, 0);
+  // at the beginning multiplications are enabled
+  let multiplicationsEnabled = true;
 
-  return `The sum of all valid multiplications is ${chalk.underline.white(totalSum)}`;
+  const { dos, donts } = lines.reduce(
+    (dosAndDonts, line: string, idx) => {
+      const doLine = `${multiplicationsEnabled ? "do()" : ""}${line}`;
+
+      let conditionMatch;
+      let mulMatch;
+
+      while ((conditionMatch = conditionPattern.exec(doLine)) !== null) {
+        const { condition, instructions } = conditionMatch.groups!;
+
+        let mulSubtotal = 0;
+        while ((mulMatch = mulPattern.exec(instructions)) !== null) {
+          const { numberX, numberY } = mulMatch.groups!;
+          mulSubtotal += Number(numberX) * Number(numberY);
+        }
+
+        // program says don't()
+        if (condition !== "do()") {
+          dosAndDonts.donts += mulSubtotal;
+          multiplicationsEnabled = false;
+          continue;
+        }
+
+        // program says do()
+        dosAndDonts.dos += mulSubtotal;
+        multiplicationsEnabled = true;
+      }
+
+      return dosAndDonts;
+    },
+    { dos: 0, donts: 0 }
+  );
+
+  return `The sum of all valid multiplications is ${chalk.underline.white(
+    dos + donts
+  )} but only ${chalk.underline.yellow(dos)} are executed.`;
 }
