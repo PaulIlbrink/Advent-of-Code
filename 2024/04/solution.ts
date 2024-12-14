@@ -20,6 +20,7 @@ export function solve(input: string): string {
 
   // part 2 solution
   let xMasCount = 0;
+  let cornerPattern = /[MS]/;
 
   const isXmas = (col: number, row: number, character: string): boolean => {
     // check x-center
@@ -38,11 +39,11 @@ export function solve(input: string): string {
     ];
     const [tl, tr, bl, br] = corners;
 
-    // corners must be either an M or S
-    if (corners.some((corner) => !/[MS]/.test(corner))) return false;
-
     // opposite corners must be different
     if (tl === br || tr === bl) return false;
+
+    // corners must be either an M or S
+    if (corners.some((corner) => !cornerPattern.test(corner))) return false;
 
     return true;
   };
