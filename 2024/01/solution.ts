@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-export function solve(input: string): string {
+export function solve(input: string): SolveResult {
   const lines = input.split("\n").map((line) => line.trim());
 
   /* --------------------------------- Part 1 --------------------------------- */
@@ -49,7 +49,14 @@ export function solve(input: string): string {
     }
   }
 
-  return `The total distance between the lists is ${chalk.underline.white(
-    distance
-  )} and similarity is ${chalk.underline.yellow(similarity)}`;
+  const part1 = distance;
+  const part2 = similarity;
+
+  return {
+    description: `The total distance between the lists is ${chalk.underline.white(
+      distance
+    )} and similarity is ${chalk.underline.yellow(similarity)}`,
+    part1,
+    part2,
+  };
 }

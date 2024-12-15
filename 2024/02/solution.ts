@@ -51,7 +51,7 @@ const dampenLevels = <T>(levels: T[], index: number): T[] => {
   return [...levels.slice(0, index), ...levels.slice(index + 1)];
 };
 
-export function solve(input: string): string {
+export function solve(input: string): SolveResult {
   const lines = input.split("\n").map((line) => line.trim());
   const reports = lines.map((line) => line.split(/\s+/).map(Number));
 
@@ -84,11 +84,18 @@ export function solve(input: string): string {
     },
     { safe: 0, safeAfterDampening: 0 }
   );
-  return `From the total of ${
-    reports.length
-  } reports only ${chalk.underline.white(
-    results.safe
-  )} are considered safe whilst ${chalk.underline.yellow(
-    results.safeAfterDampening
-  )} are safe after dampening.`;
+
+  const { safe: part1, safeAfterDampening: part2 } = results;
+
+  return {
+    description: `From the total of ${
+      reports.length
+    } reports only ${chalk.underline.white(
+      results.safe
+    )} are considered safe whilst ${chalk.underline.yellow(
+      results.safeAfterDampening
+    )} are safe after dampening.`,
+    part1,
+    part2,
+  };
 }

@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-export function solve(input: string): string {
+export function solve(input: string): SolveResult {
   const lines = input.split("\n").map((line) => line.trim());
 
   // check for multiplications
@@ -46,7 +46,14 @@ export function solve(input: string): string {
     { dos: 0, donts: 0 }
   );
 
-  return `The sum of all valid multiplications is ${chalk.underline.white(
-    dos + donts
-  )} but only ${chalk.underline.yellow(dos)} are executed.`;
+  const part1 = dos + donts;
+  const part2 = dos;
+
+  return {
+    description: `The sum of all valid multiplications is ${chalk.underline.white(
+      dos + donts
+    )} but only ${chalk.underline.yellow(dos)} are executed.`,
+    part1,
+    part2,
+  };
 }

@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-export function solve(input: string): string {
+export function solve(input: string): SolveResult {
   const lines = input.split("\n").map((line) => line.trim());
 
   const rowCount = lines.length;
@@ -101,7 +101,16 @@ export function solve(input: string): string {
     return words;
   }, 0);
 
-  return `The ${colCount} x ${rowCount} matrix contains the word XMAS ${chalk.underline.white(
-    totalWords
-  )} times, but only ${chalk.underline.yellow(xMasCount)} X-MAS'es were found.`;
+  const part1 = totalWords;
+  const part2 = xMasCount;
+
+  return {
+    description: `The ${colCount} x ${rowCount} matrix contains the word XMAS ${chalk.underline.white(
+      totalWords
+    )} times, but only ${chalk.underline.yellow(
+      xMasCount
+    )} X-MAS'es were found.`,
+    part1,
+    part2,
+  };
 }
