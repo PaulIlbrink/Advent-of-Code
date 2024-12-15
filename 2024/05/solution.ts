@@ -4,6 +4,10 @@ type Page = number;
 type PageSet = Set<Page>;
 type PageCollection = Page[];
 type PageOrderMap = Map<Page, PageSet>;
+type UpdateValidationResult = {
+  valid: PageCollection[];
+  invalid: PageCollection[];
+};
 type PageRestrictions = {
   before: PageOrderMap;
   after: PageOrderMap;
@@ -11,6 +15,7 @@ type PageRestrictions = {
 type State = {
   orderingRules: PageRestrictions;
   updates: Page[][];
+  validationResult: UpdateValidationResult;
 };
 
 const state: State = {
@@ -19,6 +24,10 @@ const state: State = {
     after: new Map(),
   },
   updates: [],
+  validationResult: {
+    valid: [],
+    invalid: [],
+  },
 };
 
 const parseInput = (input: string): boolean => {
@@ -66,20 +75,25 @@ const parseInput = (input: string): boolean => {
   return true;
 };
 
-const getValidUpdates = (): PageCollection[] => {
+const validateUpdates = (): PageCollection[] => {
   const {
     orderingRules: { before, after },
     updates,
+    validationResult: { valid, invalid },
   } = state;
 
+  // reset validation result
+  valid.length = 0;
+  invalid.length = 0;
+
   // return only valid updates
-  const validUpdates = updates.filter((update) => {
+  updates.forEach((update) => {
     // Setup some sets for checking
     const pagesProcessed: PageSet = new Set();
     const pagesToCome: PageSet = new Set(update.values());
 
     // Only valid when everything conforms with restrictions
-    return update.every((page) => {
+    const isValidUpdate = update.every((page) => {
       // We've already processed pages that were only allowed to come after this one
       if (
         before.has(page) &&
@@ -100,24 +114,57 @@ const getValidUpdates = (): PageCollection[] => {
 
       return true;
     });
+
+    isValidUpdate ? valid.push(update) : invalid.push(update);
   });
 
-  return validUpdates;
+  return valid;
 };
+
+const sortUpdate = (update: PageCollection): PageCollection => {
+  const sortedUpdate: PageCollection = [...update];
+
+  const {
+    orderingRules: { before, after },
+  } = state;
+
+  sortedUpdate.sort((a, b) => {
+    if (before.has(a) && before.get(a)!.has(b)) return -1;
+    if (after.has(a) && after.get(a)?.has(b)) return 1;
+
+    return 0;
+  });
+
+  return sortedUpdate;
+};
+
+const getMiddlePages = (updates: PageCollection[]) =>
+  updates.map((update) => update.at(Math.floor(update.length / 2))!);
+
+const getMiddlePageSum = (update: PageCollection) =>
+  update.reduce((sum, page) => sum + page, 0);
 
 export function solve(input: string): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const validUpdates = getValidUpdates();
+  const validUpdates = validateUpdates();
 
-  const middlePages = validUpdates.map(
-    (updatePages) => updatePages.at(Math.floor(updatePages.length / 2))!
-  );
-  const sumOfMiddlePages = middlePages.reduce(
-    (total, pageNr) => total + pageNr
-  );
+  const {
+    validationResult: { valid, invalid },
+  } = state;
+
+  const validMiddlePages = getMiddlePages(validUpdates);
+  const validMiddlePageSum = getMiddlePageSum(validMiddlePages);
+
+  /* --------------------------------- Part 2 --------------------------------- */
+
+  const sortedInvalidUpdates = invalid.map((unsorted) => sortUpdate(unsorted));
+  const sortedMiddlePages = getMiddlePages(sortedInvalidUpdates);
+  const sortedMiddlePageSum = getMiddlePageSum(sortedMiddlePages);
+
+  /* ------------------------------ Final result ------------------------------ */
 
   const {
     orderingRules: { before },
@@ -132,11 +179,17 @@ export function solve(input: string): SolveResult {
   description += `Out of these updates only ${
     validUpdates.length
   } were valid and the sum of their middle pages is ${chalk.underline.white(
-    sumOfMiddlePages
-  )}, and part 2 is ${chalk.underline.yellow("not solved yet")}.`;
+    validMiddlePageSum
+  )}.\n`;
+  description += `After sorting the ${
+    sortedInvalidUpdates.length
+  } invalid updates we found the sum of their middle pages to be ${chalk.underline.yellow(
+    sortedMiddlePageSum
+  )}.`;
 
   return {
     description,
-    part1: sumOfMiddlePages,
+    part1: validMiddlePageSum,
+    part2: sortedMiddlePageSum,
   };
 }

@@ -12,9 +12,12 @@ beforeAll(() => {
 describe("Day 05 example", () => {
   it("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
-
     expect(part1).toBe(143);
   });
 
+  it("Part 2 example", () => {
+    const { part2 } = solve(exampleInput);
+    expect(part2).toBe(123);
+  });
   // Add more test cases if needed
 });
