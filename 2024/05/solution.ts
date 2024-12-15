@@ -30,12 +30,17 @@ const parseInput = (input: string): boolean => {
     updates,
   } = state;
 
+  // clear state
+  before.clear();
+  after.clear();
+  updates.length = 0;
+
   // Line-type patterns
   const orderPattern = /^(?<first>\d+)\|(?<last>\d+)$/;
   const updatePattern = /^\d+(?:,\d+)*$/;
 
   // check and parse the lines
-  lines.forEach((line) => {
+  lines.forEach((line, idx) => {
     // updates
     if (updatePattern.test(line)) {
       updates.push(line.split(",").map(Number));
