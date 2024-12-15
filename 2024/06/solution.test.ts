@@ -19,7 +19,7 @@ describe(`Day ${__dirname} example`, () => {
   it("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
-    expect(part2).toBeUndefined();
+    expect(part2).toBe(6);
   });
 
   // Add more test cases if needed

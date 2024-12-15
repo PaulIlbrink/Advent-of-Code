@@ -9,7 +9,7 @@ beforeAll(() => {
   exampleInput = readFileSync(resolve(__dirname, "input.example.txt"), "utf-8");
 });
 
-describe("Day XX example", () => {
+describe(`Day ${__dirname} example`, () => {
   it("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
