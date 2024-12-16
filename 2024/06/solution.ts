@@ -1,28 +1,38 @@
 import chalk from "chalk";
 
 enum Direction {
-  N = 0,
-  E = 1,
-  S = 2,
-  W = 3,
+  N = 1,
+  W = 2,
+  S = 3,
+  E = 4,
 }
 
-type Coordinate = [x: number, y: number];
+type BasicCoordinate = { x: number; y: number };
+type Coordinate = BasicCoordinate & { direction?: Direction };
 type ObstacleAxisMap = Map<number, Set<Number>>;
+
 type ObstacleReport = {
   coordinates: CoordinateSet;
   xMap: ObstacleAxisMap;
   yMap: ObstacleAxisMap;
 };
-type Guard = { coordinate: Coordinate; direction: Direction };
+
+type Guard = {
+  position: Coordinate;
+  route: CoordinateSet;
+  visited: BasicCoordinateSet;
+};
 
 type State = {
   obstacles: ObstacleReport;
   guard?: Guard;
-  labDimensions: [columns: number, rows: number];
+  labDimensions: {
+    columns: number;
+    rows: number;
+  };
 };
 
-export class CoordinateSet extends Set<Coordinate> {
+export class BasicCoordinateSet extends Set<Coordinate> {
   // Constructor accepts an array of coordinates and adds them to the set
   constructor(initialCoordinates: Coordinate[] = []) {
     super();
@@ -32,7 +42,31 @@ export class CoordinateSet extends Set<Coordinate> {
   // Overriding the default `has` method to compare based on coordinate values
   has(coordinate: Coordinate): boolean {
     for (const item of this) {
-      if (item[0] === coordinate[0] && item[1] === coordinate[1]) {
+      if (item.x === coordinate.y && item.y === coordinate.y) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Overriding the default `add` method to ensure we only add unique coordinates
+  add(coordinate: Coordinate): this {
+    if (!this.has(coordinate)) {
+      super.add(coordinate);
+    }
+    return this;
+  }
+}
+
+export class CoordinateSet extends BasicCoordinateSet {
+  // Overriding the default `has` method to compare based on coordinate values
+  has(coordinate: Coordinate): boolean {
+    for (const item of this) {
+      if (
+        item.x === coordinate.y &&
+        item.y === coordinate.y &&
+        item.direction === coordinate.direction
+      ) {
         return true;
       }
     }
@@ -50,11 +84,11 @@ export class CoordinateSet extends Set<Coordinate> {
 
 const state: State = {
   obstacles: {
-    coordinates: new CoordinateSet(),
+    coordinates: new BasicCoordinateSet(),
     xMap: new Map(),
     yMap: new Map(),
   },
-  labDimensions: [0, 0],
+  labDimensions: { columns: 0, rows: 0 },
 };
 
 const parseInput = (input: string): void => {
@@ -63,14 +97,16 @@ const parseInput = (input: string): void => {
 
   const {
     obstacles: { coordinates, xMap, yMap },
+    labDimensions,
   } = state;
 
   // Clear state
   coordinates.clear();
   xMap.clear();
   yMap.clear();
+  labDimensions.columns = lines[0].length;
+  labDimensions.rows = lines.length;
   delete state.guard;
-  state.labDimensions = [lines[0].length, lines.length];
 
   // repopulate the state again
   lines.forEach((line, y) => {
@@ -82,15 +118,21 @@ const parseInput = (input: string): void => {
 
       // guard
       if (char === "^") {
-        state.guard = {
-          coordinate: [x, y],
+        const position: Coordinate = {
+          x,
+          y,
           direction: Direction.N,
+        };
+        state.guard = {
+          position,
+          route: new CoordinateSet([position]),
+          visited: new BasicCoordinateSet([position]),
         };
         continue;
       }
 
       // obstacles
-      coordinates.add([x, y]);
+      coordinates.add({ x, y });
       (xMap.get(x) ?? xMap.set(x, new Set()).get(x)!).add(y);
       (yMap.get(y) ?? yMap.set(y, new Set()).get(y)!).add(x);
     }
@@ -100,51 +142,52 @@ const parseInput = (input: string): void => {
 const moveGuard = (): boolean => {
   const {
     guard,
-    obstacles: { xMap },
+    obstacles: { coordinates },
   } = state;
   if (!guard) return false;
 
   const {
-    coordinate: [x, y],
-    direction,
+    position: { x, y, direction },
   } = guard;
+  if (!direction) {
+    throw new Error("Guard has lost direction");
+  }
 
-  let nextCoordinate: Coordinate;
+  let nextCoordinate = { x, y, direction };
   switch (direction) {
-    case Direction.E:
-      nextCoordinate = [x + 1, y];
-      break;
-    case Direction.S:
-      nextCoordinate = [x, y + 1];
-      break;
     case Direction.W:
-      nextCoordinate = [x - 1, y];
+    case Direction.E:
+      nextCoordinate.x += direction - 3;
       break;
-    case Direction.N:
+    // case Direction.N:
+    // case Direction.S:
     default:
-      nextCoordinate = [x, y - 1];
+      nextCoordinate.y += direction - 2;
       break;
   }
 
-  // check for an obstacle
-  if (xMap.get(nextCoordinate[0])?.has(nextCoordinate[1]) ?? false) {
+  // blocked
+  if (coordinates.has(nextCoordinate)) {
     return false;
   }
 
-  // it's ok to move
-  guard.coordinate = nextCoordinate;
+  // can move, so update stuff
+  guard.route.add({ x, y, direction });
+  guard.visited.add({ x, y });
+  guard.position = nextCoordinate;
+
   return true;
 };
 
-const guardGone = (): boolean => {
+const patrolFinished = (): boolean => {
   const {
     guard,
-    labDimensions: [columns, rows],
+    labDimensions: { columns, rows },
   } = state;
   if (!guard) return true;
 
   const {
-    coordinate: [x, y],
+    position: { x, y },
   } = guard;
 
   if (x < 0 || x >= columns || y < 0 || y >= rows) {
@@ -158,24 +201,21 @@ const rotateGuard = (): boolean => {
   const { guard } = state;
   if (!guard) return false;
 
-  guard.direction = (guard.direction + 1) % 4;
+  guard.position!.direction;
 
   return true;
 };
 
-const getGuardPatrolRoute = (): Coordinate[] => {
+const doPatrol = () => {
   const { guard } = state;
-  if (!guard) return [];
-
-  const guardRoute = [guard.coordinate];
+  if (!guard) return false;
 
   // don't start moving in circles
   let rotateSequence = 0;
 
-  while (!guardGone()) {
+  while (!patrolFinished()) {
     // move succeeded, reset rotate sequence
     if (moveGuard()) {
-      guardRoute.push(guard.coordinate);
       rotateSequence = 0;
       continue;
     }
@@ -185,10 +225,8 @@ const getGuardPatrolRoute = (): Coordinate[] => {
     rotateSequence++;
 
     // we're stuck turning circles
-    if (rotateSequence === 4) throw new Error("Guard is stuck turning circles");
+    if (rotateSequence > 3) throw new Error("Guard is stuck turning circles");
   }
-
-  return guardRoute;
 };
 
 export function solve(input: string): SolveResult {
@@ -196,23 +234,22 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const guardRoute = getGuardPatrolRoute();
+  doPatrol();
 
-  // The unique positions the guard has visited during the patrol
-  const guardPositions = new CoordinateSet(guardRoute);
+  const {
+    guard,
+    labDimensions: { columns, rows },
+  } = state;
 
-  // As the guard is now positioned outside of the lab we need to substract that one
-  const visitedLabPositions = guardPositions.size - 1;
-
-  const { labDimensions } = state;
+  const labCoordinatesVisited = guard?.visited.size || 0;
 
   return {
-    description: `The guard patrolling the lab (${labDimensions.join(
+    description: `The guard patrolling the lab (${columns}x${rows})
       " x "
     )} has visited ${chalk.underline.white(
-      visitedLabPositions
+      guard?.visited.size ?? 0
     )} positions, and part 2 is ${chalk.underline.yellow("not solved yet")}.`,
-    part1: visitedLabPositions,
-    debug: { state, guardRoute },
+    part1: labCoordinatesVisited,
+    debug: { state },
   };
 }
