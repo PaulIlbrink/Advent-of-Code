@@ -254,7 +254,7 @@ export function solve(input: string): SolveResult {
 
   console.log(visitedBefore.size, "positions were checked earlier");
 
-  const loopableCoordinates = route.size - visited.size; // guess
+  const loopableCoordinates = visitedBefore.size // guess
 
   return {
     description: `The guard patrolling the lab (${columns}x${rows})
