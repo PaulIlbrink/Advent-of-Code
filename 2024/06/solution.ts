@@ -168,6 +168,8 @@ const moveGuard = (): boolean => {
 
   // blocked
   if (coordinates.has(nextCoordinate)) {
+    guard.route.add(guard.position);
+    guard.visited.add(guard.position);
     return false;
   }
 
@@ -240,8 +242,19 @@ export function solve(input: string): SolveResult {
     guard,
     labDimensions: { columns, rows },
   } = state;
+  if (!guard) {
+    throw new Error("Guard went missing after patrol");
+  }
 
-  const labCoordinatesVisited = guard?.visited.size || 0;
+  const { route, visited } = guard;
+
+  /* --------------------------------- Part 2 --------------------------------- */
+
+  const visitedBefore = route.difference(visited);
+
+  console.log(visitedBefore.size, "positions were checked earlier");
+
+  const loopableCoordinates = route.size - visited.size; // guess
 
   return {
     description: `The guard patrolling the lab (${columns}x${rows})
@@ -249,7 +262,8 @@ export function solve(input: string): SolveResult {
     )} has visited ${chalk.underline.white(
       guard?.visited.size ?? 0
     )} positions, and part 2 is ${chalk.underline.yellow("not solved yet")}.`,
-    part1: labCoordinatesVisited,
+    part1: visited.size,
+    part2: loopableCoordinates,
     debug: { state, guard },
   };
 }
