@@ -241,6 +241,7 @@ export function solve(input: string): SolveResult {
   const {
     guard,
     labDimensions: { columns, rows },
+    obstacles: { coordinates },
   } = state;
   if (!guard) {
     throw new Error("Guard went missing after patrol");
@@ -254,15 +255,21 @@ export function solve(input: string): SolveResult {
 
   console.log(visitedBefore.size, "positions were checked earlier");
 
-  const loopableCoordinates = visitedBefore.size // guess
+  const loopableCoordinates = visitedBefore.size; // guess
+
+  const totalPositions = columns * rows;
+  const nonBlockedPositions = totalPositions - coordinates.size;
+  const visitedPositions = visited.size;
 
   return {
-    description: `The guard patrolling the lab (${columns}x${rows})
-      " x "
-    )} has visited ${chalk.underline.white(
-      guard?.visited.size ?? 0
-    )} positions, and part 2 is ${chalk.underline.yellow("not solved yet")}.`,
-    part1: visited.size,
+    description: `The guard patrolling the lab (${columns}x${rows} = ${totalPositions}) has visited ${chalk.underline.white(
+      visitedPositions
+    )} out of ${nonBlockedPositions} possible positions (${Math.round(
+      (100 * visitedPositions) / nonBlockedPositions
+    )}%), and there are ${chalk.underline.yellow(
+      loopableCoordinates
+    )} posibilities which can trap the guard in a loop.`,
+    part1: visitedPositions,
     part2: loopableCoordinates,
     debug: { state, guard },
   };
