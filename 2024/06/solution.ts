@@ -2,9 +2,9 @@ import chalk from "chalk";
 
 enum Direction {
   N = 1,
-  W = 2,
+  E = 2,
   S = 3,
-  E = 4,
+  W = 4,
 }
 
 type BasicCoordinate = { x: number; y: number };
@@ -12,7 +12,7 @@ type Coordinate = BasicCoordinate & { direction?: Direction };
 type ObstacleAxisMap = Map<number, Set<Number>>;
 
 type ObstacleReport = {
-  coordinates: CoordinateSet;
+  coordinates: BasicCoordinateSet;
   xMap: ObstacleAxisMap;
   yMap: ObstacleAxisMap;
 };
@@ -42,7 +42,7 @@ export class BasicCoordinateSet extends Set<Coordinate> {
   // Overriding the default `has` method to compare based on coordinate values
   has(coordinate: Coordinate): boolean {
     for (const item of this) {
-      if (item.x === coordinate.y && item.y === coordinate.y) {
+      if (item.x === coordinate.x && item.y === coordinate.y) {
         return true;
       }
     }
@@ -63,7 +63,7 @@ export class CoordinateSet extends BasicCoordinateSet {
   has(coordinate: Coordinate): boolean {
     for (const item of this) {
       if (
-        item.x === coordinate.y &&
+        item.x === coordinate.x &&
         item.y === coordinate.y &&
         item.direction === coordinate.direction
       ) {
@@ -125,8 +125,8 @@ const parseInput = (input: string): void => {
         };
         state.guard = {
           position,
-          route: new CoordinateSet([position]),
-          visited: new BasicCoordinateSet([position]),
+          route: new CoordinateSet(),
+          visited: new BasicCoordinateSet(),
         };
         continue;
       }
@@ -155,14 +155,14 @@ const moveGuard = (): boolean => {
 
   let nextCoordinate = { x, y, direction };
   switch (direction) {
-    case Direction.W:
     case Direction.E:
-      nextCoordinate.x += direction - 3;
+    case Direction.W:
+      nextCoordinate.x = x - direction + 3;
       break;
     // case Direction.N:
     // case Direction.S:
     default:
-      nextCoordinate.y += direction - 2;
+      nextCoordinate.y = y + direction - 2;
       break;
   }
 
@@ -172,8 +172,8 @@ const moveGuard = (): boolean => {
   }
 
   // can move, so update stuff
-  guard.route.add({ x, y, direction });
-  guard.visited.add({ x, y });
+  guard.route.add(guard.position);
+  guard.visited.add(guard.position);
   guard.position = nextCoordinate;
 
   return true;
@@ -199,9 +199,9 @@ const patrolFinished = (): boolean => {
 
 const rotateGuard = (): boolean => {
   const { guard } = state;
-  if (!guard) return false;
+  if (!guard?.position.direction) return false;
 
-  guard.position!.direction;
+  guard.position.direction = (guard.position.direction % 4) + 1;
 
   return true;
 };
@@ -250,6 +250,6 @@ export function solve(input: string): SolveResult {
       guard?.visited.size ?? 0
     )} positions, and part 2 is ${chalk.underline.yellow("not solved yet")}.`,
     part1: labCoordinatesVisited,
-    debug: { state },
+    debug: { state, guard },
   };
 }
