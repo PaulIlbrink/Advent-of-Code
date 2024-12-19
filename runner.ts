@@ -8,6 +8,7 @@ const args = process.argv.slice(2);
 const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2024";
 const dayArg = args.find((arg) => /^\d{1,2}$/.test(arg));
 const isBenchmark = args.includes("--benchmark");
+const useExample = args.includes("--example");
 
 console.log(
   `\n${chalk.red("Advent")} ${chalk.green("of")} ${chalk.red(
@@ -27,7 +28,8 @@ async function runSolution(year: string, day?: string, benchmark = false) {
   for (const d of days) {
     const dayPath = resolve(basePath, d);
     const solutionPath = resolve(dayPath, "solution.ts");
-    const inputPath = resolve(dayPath, "input.txt");
+    const inputFile = useExample ? "input.example.txt" : "input.txt";
+    const inputPath = resolve(dayPath, inputFile);
 
     try {
       const input = readFileSync(inputPath, "utf-8");

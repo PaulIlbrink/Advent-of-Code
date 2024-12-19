@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { reverse } from "dns";
 
 enum Direction {
   N = 1,
@@ -15,6 +16,7 @@ type ObstacleReport = {
   coordinates: BasicCoordinateSet;
   xMap: ObstacleAxisMap;
   yMap: ObstacleAxisMap;
+  loopHoles?: BasicCoordinateSet;
 };
 
 type Guard = {
@@ -56,6 +58,16 @@ export class BasicCoordinateSet extends Set<Coordinate> {
     }
     return this;
   }
+
+  // Overriding the `delete` method to remove based on coordinate values
+  delete(coordinate: Coordinate): boolean {
+    for (const item of this) {
+      if (item.x === coordinate.x && item.y === coordinate.y) {
+        return super.delete(item);
+      }
+    }
+    return false;
+  }
 }
 
 export class CoordinateSet extends BasicCoordinateSet {
@@ -65,7 +77,8 @@ export class CoordinateSet extends BasicCoordinateSet {
       if (
         item.x === coordinate.x &&
         item.y === coordinate.y &&
-        item.direction === coordinate.direction
+        item.direction === coordinate.direction &&
+        coordinate.direction
       ) {
         return true;
       }
@@ -79,6 +92,20 @@ export class CoordinateSet extends BasicCoordinateSet {
       super.add(coordinate);
     }
     return this;
+  }
+
+  // Overriding the `delete` method to remove based on coordinate values and direction
+  delete(coordinate: Coordinate): boolean {
+    for (const item of this) {
+      if (
+        item.x === coordinate.x &&
+        item.y === coordinate.y &&
+        item.direction === coordinate.direction
+      ) {
+        return super.delete(item);
+      }
+    }
+    return false;
   }
 }
 
@@ -139,6 +166,30 @@ const parseInput = (input: string): void => {
   });
 };
 
+const nextCoordinate = (position: Coordinate): Coordinate => {
+  const { x, y, direction } = position;
+
+  if (!direction) {
+    throw new Error("This position is missing a direction");
+  }
+
+  const nextCoordinate = { x, y, direction };
+
+  switch (direction) {
+    case Direction.E:
+    case Direction.W:
+      nextCoordinate.x = x - direction + 3;
+      break;
+    case Direction.N:
+    case Direction.S:
+    default:
+      nextCoordinate.y = y + direction - 2;
+      break;
+  }
+
+  return nextCoordinate;
+};
+
 const moveGuard = (): boolean => {
   const {
     guard,
@@ -146,28 +197,11 @@ const moveGuard = (): boolean => {
   } = state;
   if (!guard) return false;
 
-  const {
-    position: { x, y, direction },
-  } = guard;
-  if (!direction) {
-    throw new Error("Guard has lost direction");
-  }
-
-  let nextCoordinate = { x, y, direction };
-  switch (direction) {
-    case Direction.E:
-    case Direction.W:
-      nextCoordinate.x = x - direction + 3;
-      break;
-    // case Direction.N:
-    // case Direction.S:
-    default:
-      nextCoordinate.y = y + direction - 2;
-      break;
-  }
+  const { position } = guard;
+  let nextPosition = nextCoordinate(position);
 
   // blocked
-  if (coordinates.has(nextCoordinate)) {
+  if (coordinates.has(nextPosition)) {
     guard.route.add(guard.position);
     guard.visited.add(guard.position);
     return false;
@@ -176,14 +210,13 @@ const moveGuard = (): boolean => {
   // can move, so update stuff
   guard.route.add(guard.position);
   guard.visited.add(guard.position);
-  guard.position = nextCoordinate;
+  guard.position = nextPosition;
 
   return true;
 };
 
-const patrolFinished = (): boolean => {
+const patrolFinished = (guard?: Guard): boolean => {
   const {
-    guard,
     labDimensions: { columns, rows },
   } = state;
   if (!guard) return true;
@@ -199,15 +232,18 @@ const patrolFinished = (): boolean => {
   return false;
 };
 
+const nextDirection = (direction: Direction): Direction => (direction % 4) + 1;
+
 const rotateGuard = (): boolean => {
   const { guard } = state;
   if (!guard?.position.direction) return false;
 
-  guard.position.direction = (guard.position.direction % 4) + 1;
+  guard.position.direction = nextDirection(guard.position.direction);
 
   return true;
 };
 
+// move forward
 const doPatrol = () => {
   const { guard } = state;
   if (!guard) return false;
@@ -215,7 +251,7 @@ const doPatrol = () => {
   // don't start moving in circles
   let rotateSequence = 0;
 
-  while (!patrolFinished()) {
+  while (!patrolFinished(guard)) {
     // move succeeded, reset rotate sequence
     if (moveGuard()) {
       rotateSequence = 0;
@@ -229,6 +265,114 @@ const doPatrol = () => {
     // we're stuck turning circles
     if (rotateSequence > 3) throw new Error("Guard is stuck turning circles");
   }
+};
+
+const findLoop = (scout: Guard, block: Coordinate): boolean => {
+  const {
+    obstacles: { coordinates },
+  } = state;
+
+  // the standard obstacles and the scientist block
+  const scoutObstacles = structuredClone(coordinates);
+  scoutObstacles.add(block);
+
+  // keep walking
+  let nextPosition: Coordinate;
+  do {
+    nextPosition = nextCoordinate(scout.position);
+
+    // This looks familiar... BECAUSE WE HAVE BEEN HERE BEFORE
+    if (scout.route.has(nextPosition)) {
+      console.log("loop found after", scout.visited.size);
+      return true;
+    }
+
+    // Hmm a blockage, lets turn right
+    let rotateCount = 0;
+    while (scoutObstacles.has(nextPosition) && rotateCount < 4) {
+      nextPosition.direction = nextDirection(nextPosition.direction!);
+      rotateCount++;
+    }
+
+    // We're stuck in a single position, so technically in a loop?
+    if (rotateCount >= 4) {
+      console.log("CIRCLE found");
+      return true;
+    }
+
+    // Ok we can proceed
+    scout.route.add(scout.position);
+    scout.visited.add(scout.position);
+    scout.position = nextPosition;
+
+    // did we reach the edge?
+  } while (!patrolFinished(scout));
+
+  console.log("left the lab after", scout.visited.size);
+
+  return false;
+};
+
+const searchForLoopHoles = () => {
+  const { guard } = state;
+
+  // wait for patrol to finish
+  if (!guard || !patrolFinished()) return;
+
+  const loopHoles = new BasicCoordinateSet();
+
+  // let's keep the original guard intact
+  const { route, position: guardPosition } = guard;
+
+  //
+  const searchRouteSet = structuredClone(route);
+  const searchRouteArr = Array.from(searchRouteSet).reverse();
+
+  // Need the previous element for reference, so
+  let lastPosition = guardPosition;
+
+  for (let i = 0; i < searchRouteArr.length; i++) {
+    const position = searchRouteArr[i];
+
+    // shorten the route till we get back at the start
+    searchRouteSet.delete(position);
+
+    // skip, turned? (duplicate sequentiel coordinates)
+    if (position.x === lastPosition.x && position.y === lastPosition.y) {
+      continue;
+    }
+
+    // already tried this, but since we're reversing that the earlier check is invalid
+    if (loopHoles.has(lastPosition)) {
+      loopHoles.delete(lastPosition);
+    }
+
+    // see what happens if we would have turned right here.
+    const scout: Guard = {
+      position,
+      route: structuredClone(searchRouteSet), // should be trimmed
+      visited: new BasicCoordinateSet(),
+    };
+
+    // rotate right
+    scout.position.direction = nextDirection(scout.position.direction!);
+
+    // continue on the new path
+    const foundLoop: boolean = findLoop(scout, lastPosition);
+
+    console.log(
+      `Scout #${i} is with routes ${searchRouteSet.size}, succesfull? ${foundLoop} total loopholes found ${loopHoles.size}`
+    );
+
+    // we found a loop
+    if (foundLoop) {
+      loopHoles.add(lastPosition);
+    }
+
+    lastPosition = position;
+  }
+
+  state.obstacles.loopHoles = loopHoles;
 };
 
 export function solve(input: string): SolveResult {
@@ -247,28 +391,34 @@ export function solve(input: string): SolveResult {
     throw new Error("Guard went missing after patrol");
   }
 
-  const { route, visited } = guard;
-
-  /* --------------------------------- Part 2 --------------------------------- */
-
-  const visitedBefore = route.difference(visited);
-
-  console.log(visitedBefore.size, "positions were checked earlier");
-
-  const loopableCoordinates = visitedBefore.size; // guess
+  const { visited } = guard;
 
   const totalPositions = columns * rows;
   const nonBlockedPositions = totalPositions - coordinates.size;
   const visitedPositions = visited.size;
 
+  let description = `The guard patrolling the lab (${columns}x${rows} = ${totalPositions}) has visited ${chalk.underline.white(
+    visitedPositions
+  )} out of ${nonBlockedPositions} possible positions (${Math.round(
+    (100 * visitedPositions) / nonBlockedPositions
+  )}%)`;
+
+  /* --------------------------------- Part 2 --------------------------------- */
+
+  searchForLoopHoles();
+
+  const {
+    obstacles: { loopHoles },
+  } = state;
+
+  const loopableCoordinates = loopHoles?.size || -1;
+
+  description += `, and there are ${chalk.underline.yellow(
+    loopableCoordinates
+  )} posibilities which can trap the guard in a loop.`;
+
   return {
-    description: `The guard patrolling the lab (${columns}x${rows} = ${totalPositions}) has visited ${chalk.underline.white(
-      visitedPositions
-    )} out of ${nonBlockedPositions} possible positions (${Math.round(
-      (100 * visitedPositions) / nonBlockedPositions
-    )}%), and there are ${chalk.underline.yellow(
-      loopableCoordinates
-    )} posibilities which can trap the guard in a loop.`,
+    description,
     part1: visitedPositions,
     part2: loopableCoordinates,
     debug: { state, guard },
