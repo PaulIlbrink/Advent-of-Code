@@ -10,7 +10,7 @@ export enum Direction {
 export enum PositionType {
   AVAILABLE = 1,
   BLOCKED = 2,
-  FINISHED = 3,
+  OUTSIDE_MAP = 3,
 }
 
 export enum PatrolResult {
@@ -151,7 +151,8 @@ export const getPositionType = ([x, y, _]: Position): PositionType => {
 
   if (obstacles.has([x, y])) return PositionType.BLOCKED;
 
-  if (x < 0 || y < 0 || x >= columns || y >= rows) return PositionType.FINISHED;
+  if (x < 0 || y < 0 || x >= columns || y >= rows)
+    return PositionType.OUTSIDE_MAP;
 
   return PositionType.AVAILABLE;
 };
@@ -176,9 +177,9 @@ const patrol = (guard: Guard): PatrolResult => {
 
     // mutate position and position history
     positionHistory.add(position);
-    coordinateHistory.add(position); 
+    coordinateHistory.add(position);
     guard.position = nextPosition;
-  } while (getPositionType(guard.position) !== PositionType.FINISHED);
+  } while (getPositionType(guard.position) !== PositionType.OUTSIDE_MAP);
 
   return PatrolResult.FINISHED;
 };
