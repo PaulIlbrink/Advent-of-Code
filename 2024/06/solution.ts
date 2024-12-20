@@ -16,6 +16,7 @@ export enum PositionType {
 export enum PatrolResult {
   FINISHED = 1,
   LOOP = 2,
+  EXISTING_LOOP = 3,
 }
 
 export class CoordinateSet {
@@ -23,6 +24,15 @@ export class CoordinateSet {
 
   private toKey(coord: Coordinate): string {
     return `${coord[0]},${coord[1]}`;
+  }
+
+  private fromKey(key: string): Coordinate {
+    const [x, y] = key.split(",").map(Number);
+    return [x, y];
+  }
+
+  constructor(coords: Coordinate[] = []) {
+    coords.forEach((coord) => this.add(coord));
   }
 
   has(coord: Coordinate): boolean {
@@ -44,6 +54,10 @@ export class CoordinateSet {
   size(): number {
     return this.set.size;
   }
+
+  values(): Coordinate[] {
+    return Array.from(this.set, this.fromKey);
+  }
 }
 
 export class PositionSet {
@@ -51,6 +65,15 @@ export class PositionSet {
 
   private toKey(pos: Position): string {
     return `${pos[0]},${pos[1]},${pos[2]}`;
+  }
+
+  private fromKey(key: string): Position {
+    const [x, y, direction] = key.split(",").map(Number);
+    return [x, y, direction];
+  }
+
+  constructor(positions: Position[] = []) {
+    positions.forEach((pos) => this.add(pos));
   }
 
   has(pos: Position): boolean {
@@ -71,6 +94,10 @@ export class PositionSet {
 
   size(): number {
     return this.set.size;
+  }
+
+  values(): Position[] {
+    return Array.from(this.set, this.fromKey);
   }
 }
 
@@ -145,9 +172,17 @@ export const getNextPosition = ([x, y, direction]: Position): Position => {
   }
 };
 
-export const getPositionType = ([x, y, _]: Position): PositionType => {
+export const getPositionType = (
+  [x, y, _]: Position,
+  block?: Coordinate
+): PositionType => {
   const { obstacles, lab } = state;
   const [columns, rows] = lab;
+
+  if (block) {
+    const [xB, yB] = block;
+    if (x == xB && y == yB) return PositionType.BLOCKED;
+  }
 
   if (obstacles.has([x, y])) return PositionType.BLOCKED;
 
@@ -157,7 +192,32 @@ export const getPositionType = ([x, y, _]: Position): PositionType => {
   return PositionType.AVAILABLE;
 };
 
-const patrol = (guard: Guard): PatrolResult => {
+const scoutPatrol = (blockPosition: Position): PatrolResult => {
+  const [x, y, _] = blockPosition;
+  const blockCoord: Coordinate = [x, y];
+
+  const { guard, loopHoles } = state;
+
+  // we already checked this coordinate earlier (from another direction) so this is not a valid option
+  if (loopHoles.has(blockCoord)) return PatrolResult.EXISTING_LOOP;
+
+  const scout: Guard = {
+    position: [...guard.position],
+    positionHistory: new PositionSet(guard.positionHistory.values()),
+    coordinateHistory: new CoordinateSet(guard.coordinateHistory.values()),
+  };
+
+  const scoutReport = patrol(scout, blockCoord);
+
+  // YES!!! we found a loophole
+  if (scoutReport === PatrolResult.LOOP) {
+    loopHoles.add(blockCoord);
+  }
+
+  return scoutReport;
+};
+
+const patrol = (guard: Guard, block?: Coordinate): PatrolResult => {
   let nextPosition: Position;
   do {
     const { position, positionHistory, coordinateHistory } = guard;
@@ -167,17 +227,24 @@ const patrol = (guard: Guard): PatrolResult => {
     // Loop found
     if (positionHistory.has(nextPosition)) return PatrolResult.LOOP;
 
-    const nextType = getPositionType(nextPosition);
+    const nextType = getPositionType(nextPosition, block);
+
+    const [x, y, direction] = position;
 
     // Blocked so rotate right
     if (nextType === PositionType.BLOCKED) {
-      const [x, y, direction] = position;
       nextPosition = [x, y, getNextDirection(direction)];
     }
 
-    // mutate position and position history
+    // Going straight, but also opportunity to block
+    if (nextType === PositionType.AVAILABLE && !block) {
+      scoutPatrol(nextPosition);
+    }
+
+    // mutate position and coordinate history
     positionHistory.add(position);
-    coordinateHistory.add(position);
+    coordinateHistory.add([x, y]);
+
     guard.position = nextPosition;
   } while (getPositionType(guard.position) !== PositionType.OUTSIDE_MAP);
 
@@ -196,6 +263,7 @@ export function solve(input: string): SolveResult {
     obstacles,
     lab,
     guard: { coordinateHistory },
+    loopHoles,
   } = state;
 
   const [columns, rows] = lab;
@@ -212,7 +280,7 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  const loopableCoordinates = -1; // loopHoles?.size
+  const loopableCoordinates = loopHoles.size();
 
   description += `, and there are ${chalk.underline.yellow(
     loopableCoordinates
