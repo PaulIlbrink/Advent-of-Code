@@ -31,8 +31,11 @@ export class CoordinateSet {
     return [x, y];
   }
 
-  constructor(coords: Coordinate[] = []) {
-    coords.forEach((coord) => this.add(coord));
+  //   constructor(coords: Coordinate[] = []) {
+  //     coords.forEach((coord) => this.add(coord));
+  //   }
+  constructor(internal: Set<string> = new Set<string>()) {
+    this.set = internal;
   }
 
   has(coord: Coordinate): boolean {
@@ -58,6 +61,9 @@ export class CoordinateSet {
   values(): Coordinate[] {
     return Array.from(this.set, this.fromKey);
   }
+  clonePrivateSet(): Set<string> {
+    return new Set(this.set.values());
+  }
 }
 
 export class PositionSet {
@@ -71,9 +77,8 @@ export class PositionSet {
     const [x, y, direction] = key.split(",").map(Number);
     return [x, y, direction];
   }
-
-  constructor(positions: Position[] = []) {
-    positions.forEach((pos) => this.add(pos));
+  constructor(privateSet: Set<string> = new Set()) {
+    this.set = privateSet;
   }
 
   has(pos: Position): boolean {
@@ -98,6 +103,9 @@ export class PositionSet {
 
   values(): Position[] {
     return Array.from(this.set, this.fromKey);
+  }
+  clonePrivateSet(): Set<string> {
+    return new Set(this.set);
   }
 }
 
@@ -128,14 +136,21 @@ const state: State = {
   },
 };
 
+const resetState = () => {
+  state.obstacles.clear();
+  state.loopHoles.clear();
+  state.guard.position = [-1, -1, Direction.N];
+  state.guard.positionHistory.clear();
+  state.guard.coordinateHistory.clear();
+  state.lab = [0, 0];
+};
+
 const parseInput = (input: string): void => {
   const lines = input.split("\n").map((line) => line.trim());
   if (!lines.length) return;
 
-  const { obstacles, lab, guard } = state;
+  const { guard, obstacles } = state;
 
-  // Clear state
-  obstacles.clear();
   state.lab = [lines[0].length, lines.length];
 
   // repopulate the state again
@@ -203,8 +218,8 @@ const scoutPatrol = (blockPosition: Position): PatrolResult => {
 
   const scout: Guard = {
     position: [...guard.position],
-    positionHistory: new PositionSet(guard.positionHistory.values()),
-    coordinateHistory: new CoordinateSet(guard.coordinateHistory.values()),
+    positionHistory: new PositionSet(guard.positionHistory.clonePrivateSet()),
+    coordinateHistory: new CoordinateSet(), // no need to clone this
   };
 
   const scoutReport = patrol(scout, blockCoord);
@@ -219,6 +234,7 @@ const scoutPatrol = (blockPosition: Position): PatrolResult => {
 
 const patrol = (guard: Guard, block?: Coordinate): PatrolResult => {
   let nextPosition: Position;
+
   do {
     const { position, positionHistory, coordinateHistory } = guard;
 
@@ -238,7 +254,7 @@ const patrol = (guard: Guard, block?: Coordinate): PatrolResult => {
 
     // Going straight, but also opportunity to block
     if (nextType === PositionType.AVAILABLE && !block) {
-      scoutPatrol(nextPosition);
+      //     scoutPatrol(nextPosition);
     }
 
     // mutate position and coordinate history
@@ -253,10 +269,13 @@ const patrol = (guard: Guard, block?: Coordinate): PatrolResult => {
 
 export function solve(input: string): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
+  resetState();
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
   const { guard } = state;
+
+  const { position: guardStartPosition } = guard;
   patrol(guard);
 
   const {
@@ -280,6 +299,36 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 2 --------------------------------- */
 
+  // clear loopholes (should be empty anyway)
+  loopHoles.clear();
+
+  const scout: Guard = {
+    position: guardStartPosition,
+    positionHistory: new PositionSet(),
+    coordinateHistory: new CoordinateSet(),
+  };
+  // fuck it, lets bruteforce then
+  coordinateHistory.values().forEach((coord, i) => {
+    state.obstacles.add(coord);
+
+    // reset scout
+    scout.position = guardStartPosition;
+    scout.positionHistory.clear();
+    scout.coordinateHistory.clear();
+
+    const scoutReport = patrol(scout);
+    if (scoutReport === PatrolResult.LOOP) {
+      loopHoles.add(coord);
+    }
+
+    state.obstacles.delete(coord);
+  });
+
+  const [x, y, _] = guardStartPosition;
+
+  // delete starting position
+  loopHoles.delete([x, y]);
+  
   const loopableCoordinates = loopHoles.size();
 
   description += `, and there are ${chalk.underline.yellow(
