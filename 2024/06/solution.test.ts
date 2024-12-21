@@ -61,8 +61,11 @@ describe(`Day ${__dirname} example`, () => {
   it("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
-    expect(part2).toBe(41);
-    expect(part2).not.toBe(1753);
+    expect(part2).toBe(6);
+    
+    // actual input
+    // expect(part2).not.toBe(1753); // my smart wrong result
+    // expect(part2).toBe(1663); // correct result, brute forced
   });
 
   // Add more test cases if needed

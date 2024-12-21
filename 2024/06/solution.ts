@@ -1,5 +1,7 @@
 import chalk from "chalk";
 
+let BRUTE_FORCE = true;
+
 export enum Direction {
   N = 1,
   E = 2,
@@ -253,8 +255,8 @@ const patrol = (guard: Guard, block?: Coordinate): PatrolResult => {
     }
 
     // Going straight, but also opportunity to block
-    if (nextType === PositionType.AVAILABLE && !block) {
-      //     scoutPatrol(nextPosition);
+    if (!BRUTE_FORCE && nextType === PositionType.AVAILABLE && !block) {
+      scoutPatrol(nextPosition);
     }
 
     // mutate position and coordinate history
@@ -300,35 +302,62 @@ export function solve(input: string): SolveResult {
   /* --------------------------------- Part 2 --------------------------------- */
 
   // clear loopholes (should be empty anyway)
-  loopHoles.clear();
 
-  const scout: Guard = {
-    position: guardStartPosition,
-    positionHistory: new PositionSet(),
-    coordinateHistory: new CoordinateSet(),
-  };
-  // fuck it, lets bruteforce then
-  coordinateHistory.values().forEach((coord, i) => {
-    state.obstacles.add(coord);
+  const smartHoles = new CoordinateSet(loopHoles.clonePrivateSet());
+  console.log('initial smartholes are', smartHoles.size())
 
-    // reset scout
-    scout.position = guardStartPosition;
-    scout.positionHistory.clear();
-    scout.coordinateHistory.clear();
+  BRUTE_FORCE = true;
 
-    const scoutReport = patrol(scout);
-    if (scoutReport === PatrolResult.LOOP) {
-      loopHoles.add(coord);
-    }
+  if (BRUTE_FORCE) {
+    loopHoles.clear();
 
-    state.obstacles.delete(coord);
-  });
+    const scout: Guard = {
+      position: guardStartPosition,
+      positionHistory: new PositionSet(),
+      coordinateHistory: new CoordinateSet(),
+    };
+
+    // fuck it, lets bruteforce then
+    coordinateHistory.values().forEach((coord, i) => {
+      state.obstacles.add(coord);
+
+      // reset scout
+      scout.position = guardStartPosition;
+      scout.positionHistory.clear();
+      scout.coordinateHistory.clear();
+
+      const scoutReport = patrol(scout);
+      if (scoutReport === PatrolResult.LOOP) {
+        loopHoles.add(coord);
+      }
+
+      state.obstacles.delete(coord);
+    });
+  }
 
   const [x, y, _] = guardStartPosition;
 
   // delete starting position
   loopHoles.delete([x, y]);
-  
+
+  const dumbHoles = new CoordinateSet(loopHoles.clonePrivateSet());
+
+  console.log(
+    "smart holes",
+    smartHoles.size(),
+    "vs dumb holes",
+    dumbHoles.size()
+  );
+  const dumbNotInSmart = dumbHoles
+    .values()
+    .filter((hole) => smartHoles.has(hole));
+  const smartNotInDumb = smartHoles
+    .values()
+    .filter((hole) => dumbHoles.has(hole));
+
+  console.log("dumb not in smart", dumbNotInSmart.length);
+  console.log("smart not in dumb", smartNotInDumb.length);
+
   const loopableCoordinates = loopHoles.size();
 
   description += `, and there are ${chalk.underline.yellow(
