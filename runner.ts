@@ -48,7 +48,6 @@ async function runSolution(year: string, day?: string, benchmark = false) {
       const avgTime =
         elapsedTimes.reduce((sum, t) => sum + t, 0) / elapsedTimes.length;
 
-      //   const { description } = solve(input); // Run once to get the actual result
       const { description } = result;
       console.log(`Day ${chalk.green(d)}:`, description);
       console.log(
