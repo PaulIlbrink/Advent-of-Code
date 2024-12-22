@@ -59,9 +59,14 @@ export const solveEquation = (
   // exactly 2 operands, so lets do some math evaluation
   if (operands.length === 2) {
     const [a, b] = operands;
-    const operator = operators.find(
-      (operator) => result === eval(`${a} ${operator} ${b}`)
-    );
+    const operator = operators.find((operator) => {
+      switch (operator) {
+        case Operator.TIMES:
+          return result === a * b;
+        case Operator.PLUS:
+          return result === a + b;
+      }
+    });
 
     // no operator found, false
     if (!operator) return solution;
@@ -73,14 +78,24 @@ export const solveEquation = (
   }
 
   // we have 3 or more operands, lets do some recursions
-  const last = operands.at(-1);
+  const last = operands.at(-1)!;
   const rest = operands.slice(0, -1);
 
   const validSubSolution = operators
     .map((operator) => {
-      const inverseResult: number = eval(
-        `${result} ${inverse(operator)} ${last}`
-      );
+      let inverseResult: number;
+      switch (operator) {
+        case Operator.TIMES:
+          inverseResult = result / last;
+          break;
+        case Operator.PLUS:
+          inverseResult = result - last;
+          break;
+        default:
+          throw new Error("Unknown operator");
+      }
+
+      eval(`${result} ${inverse(operator)} ${last}`);
       const subEquation: Equation = {
         result: inverseResult,
         operands: rest,
