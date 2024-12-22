@@ -55,7 +55,7 @@ describe(`Day ${__dirname} example`, () => {
   it("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
-    expect(part1).toBe(6);
+    expect(part1).toBe(41);
   });
 
   it("Part 2 example", () => {

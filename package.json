@@ -12,8 +12,8 @@
     "benchmark": "bun runner.ts 2024 --benchmark",
     "benchmark:day": "bun runner.ts 2024 1 --benchmark",
     "benchmark:year": "bun runner.ts 2024 --benchmark",
-    "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test": "bun test --silent",
+    "test:watch": "bun test --watch --silent"
   },
   "devDependencies": {
     "@types/bun": "latest"
