@@ -29,6 +29,7 @@ const resetState = () => {
   state.equations.length = 0;
 };
 
+// @deprecated
 const inverse = (operator: Operator): Operator => {
   switch (operator) {
     case Operator.TIMES:
@@ -95,7 +96,6 @@ export const solveEquation = (
           throw new Error("Unknown operator");
       }
 
-      eval(`${result} ${inverse(operator)} ${last}`);
       const subEquation: Equation = {
         result: inverseResult,
         operands: rest,
