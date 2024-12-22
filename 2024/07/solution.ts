@@ -1,11 +1,11 @@
 import chalk from "chalk";
 
 export enum Operator {
-  TIMES = "*",
-  DIVIDE = "/",
-  PLUS = "+",
-  MINUS = "-",
-  CONCAT = "||",
+  TIMES = 1,
+  DIVIDE = 2,
+  PLUS = 3,
+  MINUS = 4,
+  CONCAT = 5,
 }
 
 export type Equation = {
@@ -80,10 +80,10 @@ export const solveEquation = (
     const [a, b] = operands;
     const operator = operators.find((operator) => {
       switch (operator) {
-        case Operator.TIMES:
-          return result === a * b;
         case Operator.PLUS:
           return result === a + b;
+        case Operator.TIMES:
+          return result === a * b;
         case Operator.CONCAT:
           return result === numberConcat(a, b);
         default:
