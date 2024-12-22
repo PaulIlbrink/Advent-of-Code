@@ -1,5 +1,7 @@
 # Dependency directories
 node_modules/
 
+build/
+
 input.txt
 !template/input.txt
