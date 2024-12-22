@@ -23,7 +23,7 @@ async function runSolution(year: string, day?: string, benchmark = false) {
   let totalStartTime = performance.now();
   let totalElapsedTime = 0;
 
-  const iterations = benchmark ? 1000 : 1; // Number of repetitions for benchmarking
+  const iterations = benchmark ? 25 : 1; // Number of repetitions for benchmarking
 
   for (const d of days) {
     const dayPath = resolve(basePath, d);
