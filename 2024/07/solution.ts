@@ -5,6 +5,7 @@ export enum Operator {
   DIVIDE = "/",
   PLUS = "+",
   MINUS = "-",
+  CONCAT = "||",
 }
 
 export type Equation = {
@@ -25,7 +26,7 @@ const state: State = {
   equations: [],
 };
 
-const resetState = () => {
+export const resetState = () => {
   state.equations.length = 0;
 };
 
@@ -45,14 +46,31 @@ const inverse = (operator: Operator): Operator => {
   }
 };
 
+export const numberOfDigits = (a: number): number => {
+  if (a === 0) return 1;
+
+  if (a > 0) return Math.floor(Math.log10(a)) + 1;
+
+  return numberOfDigits(-1 * a);
+};
+
+export const concatFactor = (a: number): number =>
+  Math.pow(10, numberOfDigits(a));
+
+export const numberConcat = (a: number, b: number): number =>
+  a * concatFactor(b) + b;
+
 export const solveEquation = (
   equation: Equation,
+  allowConcat: boolean = false,
   recursiveOperators: Operator[] = []
 ): Solution => {
   const { result, operands } = equation;
   const solution: Solution = { valid: false };
 
   const operators = [Operator.TIMES, Operator.PLUS];
+
+  if (allowConcat) operators.push(Operator.CONCAT);
 
   // we need at least 2 operands
   if (operands.length < 2) solution;
@@ -66,6 +84,10 @@ export const solveEquation = (
           return result === a * b;
         case Operator.PLUS:
           return result === a + b;
+        case Operator.CONCAT:
+          return result === numberConcat(a, b);
+        default:
+          throw new Error("Unknown operator");
       }
     });
 
@@ -92,6 +114,10 @@ export const solveEquation = (
         case Operator.PLUS:
           inverseResult = result - last;
           break;
+        case Operator.CONCAT:
+          const factor = concatFactor(last);
+          inverseResult = (result - last) / factor;
+          break;
         default:
           throw new Error("Unknown operator");
       }
@@ -101,7 +127,7 @@ export const solveEquation = (
         operands: rest,
       };
 
-      const subSolution = solveEquation(subEquation, [
+      const subSolution = solveEquation(subEquation, allowConcat, [
         operator,
         ...recursiveOperators,
       ]);
@@ -131,6 +157,17 @@ const parseInput = (input: string): void => {
   state.equations.push(...equations);
 };
 
+const calibrationResult = (allowConcat = false) => {
+  const { equations } = state;
+  return equations.reduce((total, equation) => {
+    const { valid } = solveEquation(equation, allowConcat);
+    if (!valid) return total;
+
+    const { result } = equation;
+    return total + result;
+  }, 0);
+};
+
 export function solve(input: string): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
 
@@ -139,27 +176,21 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 1 --------------------------------- */
 
-  const { equations } = state;
+  const result = calibrationResult();
 
-  // solve the equations
-  const totalCalibrationResult = equations.reduce((total, equation) => {
-    const { valid } = solveEquation(equation);
-    if (!valid) return total;
-
-    const { result } = equation;
-    return total + result;
-  }, 0);
-
-  const part1 = totalCalibrationResult;
+  const part1 = result;
   const part1fmt = chalk.underline.white(part1);
   let description = `The total calibration result is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  const part2 = "not solved yet";
+  const allowConcat = true;
+  const resultWithConcat = calibrationResult(allowConcat);
+
+  const part2 = resultWithConcat;
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and after allowing concat is ${part2fmt}.`;
 
   /* --------------------------------- Result --------------------------------- */
-  return { description, part1 };
+  return { description, part1, part2 };
 }
