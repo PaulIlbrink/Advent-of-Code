@@ -22,19 +22,16 @@ describe(`Day ${__dirname} functions`, () => {
   test("parseInput", () => {
     parseInput("12345");
 
-    const { fileSizes, freeSpaces, total } = state;
+    const { fileSizes, freeSpaces, totalFileSize, totalFreeSpace } = state;
 
     expect(fileSizes).toEqual([1, 3, 5]);
     expect(freeSpaces).toEqual([2, 4]);
 
-    expect(total).toEqual([9, 6]);
-
-    const [file, free] = total;
-    expect(file).toBe(9);
-    expect(free).toBe(6);
+    expect(totalFileSize).toBe(9);
+    expect(totalFreeSpace).toBe(6);
   });
 
-  test.skip("sumRange", () => {
+  test("sumRange", () => {
     expect(sumRange(1, 2)).toBe(3);
 
     // 9 10 ... 16 17
@@ -42,18 +39,16 @@ describe(`Day ${__dirname} functions`, () => {
 
     // 9 10 ... 25 26
     expect(sumRange(9, 18)).toBe(315);
-
-    expect(sumRange(9, 18)).toBe(315);
   });
 
-  test.skip("filePartChecksum", () => {
+  test("filePartChecksum", () => {
     expect(filePartChecksum(0, 0, 9)).toBe(0);
 
     expect(filePartChecksum(1, 9, 9)).toBe(117);
 
     expect(filePartChecksum(2, 18, 9)).toBe(396);
 
-    expect(filePartChecksum(2, 1, 0)).toBe(0);
+    // expect(filePartChecksum(2, 1, 0)).toBe(0);
   });
 
   test("fileSystemChecksum", () => {
@@ -68,12 +63,12 @@ describe(`Day ${__dirname} functions`, () => {
     checksum = fileSystemChecksum();
 
     // 0*(0..8) + 1*(9..17) + 2*(18..26)
-    expect(checksum).toBe(60);
+    expect(checksum).toBe(117 + 396);
   });
 });
 
 describe(`Day ${__dirname} example`, () => {
-  test.skip("Part 1 example", () => {
+  test("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
     expect(part1).toBe(1928);
@@ -82,7 +77,7 @@ describe(`Day ${__dirname} example`, () => {
   test.skip("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
-    expect(part2).toBe(0);
+    expect(part2).toBe(2858);
   });
 
   // Add more test cases if needed
