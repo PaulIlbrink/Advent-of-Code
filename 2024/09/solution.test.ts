@@ -2,12 +2,13 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
 import {
   filePartChecksum,
-  fileSystemChecksum,
+  compactFileSystemChecksum,
   parseInput,
   resetState,
   solve,
   state,
   sumRange,
+  defragFileSystemChecksum,
 } from "./solution";
 import { resolve } from "path";
 
@@ -47,36 +48,44 @@ describe(`Day ${__dirname} functions`, () => {
     expect(filePartChecksum(1, 9, 9)).toBe(117);
 
     expect(filePartChecksum(2, 18, 9)).toBe(396);
-
-    // expect(filePartChecksum(2, 1, 0)).toBe(0);
   });
 
-  test("fileSystemChecksum", () => {
+  test("compactFileSystemChecksum", () => {
     parseInput("12345");
 
-    let checksum = fileSystemChecksum();
+    let checksum = compactFileSystemChecksum();
 
     // 0*0 + 1*(3+4+5) + 2*(1+2 + 6+7+8)
     expect(checksum).toBe(60);
 
     parseInput("90909");
-    checksum = fileSystemChecksum();
+    checksum = compactFileSystemChecksum();
 
     // 0*(0..8) + 1*(9..17) + 2*(18..26)
     expect(checksum).toBe(117 + 396);
   });
+
+  test("defrag fileParthCecksums", () => {
+    expect(filePartChecksum(1, 3, 1)).toBe(3);
+  });
+
+  test("defragFileSystemChecksum", () => {
+    parseInput("321");
+
+    let checksum = defragFileSystemChecksum();
+
+    expect(checksum).toBe(3);
+  });
 });
 
 describe(`Day ${__dirname} example`, () => {
-  test("Part 1 example", () => {
-    const { part1 } = solve(exampleInput);
+  const { part1, part2 } = solve(exampleInput);
 
+  test("Part 1 example", () => {
     expect(part1).toBe(1928);
   });
 
-  test.skip("Part 2 example", () => {
-    const { part2 } = solve(exampleInput);
-
+  test("Part 2 example", () => {
     expect(part2).toBe(2858);
   });
 

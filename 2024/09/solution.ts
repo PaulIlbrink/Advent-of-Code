@@ -7,12 +7,14 @@ export type State = {
   freeSpaces: number[];
   totalFileSize: number;
   totalFreeSpace: number;
+  spaceFiles: Map<number, number[]>;
 };
 export const state: State = {
   fileSizes: [],
   freeSpaces: [],
   totalFileSize: 0,
   totalFreeSpace: 0,
+  spaceFiles: new Map(),
 };
 
 export const resetState = () => {
@@ -20,22 +22,7 @@ export const resetState = () => {
   state.freeSpaces.length = 0;
   state.totalFileSize = 0;
   state.totalFreeSpace = 0;
-};
-
-export const sumRange = (start: number, length: number): number => {
-  const end = start + length - 1;
-  const sum = (length / 2) * (start + end);
-
-  return sum;
-};
-
-export const filePartChecksum = (
-  id: number,
-  index: number,
-  length: number,
-  debug = ""
-) => {
-  return id * sumRange(index, length);
+  state.spaceFiles.clear();
 };
 
 export const parseInput = (input: string): void => {
@@ -68,8 +55,29 @@ export const parseInput = (input: string): void => {
   state.totalFreeSpace = totalFreeSpace;
 };
 
-export const fileSystemChecksum = (): number => {
-  const { fileSizes, freeSpaces, totalFileSize } = state;
+export const sumRange = (start: number, length: number): number => {
+  const end = start + length - 1;
+  const sum = (length / 2) * (start + end);
+
+  return sum;
+};
+
+export const filePartChecksum = (
+  id: number,
+  index: number,
+  length: number,
+  debug = ""
+) => {
+  const cc = id * sumRange(index, length);
+  if (debug.length)
+    console.log(
+      `[${debug}] cc ${cc} = id ${id} * (index ${index}, length ${length})`
+    );
+  return cc;
+};
+
+export const compactFileSystemChecksum = (): number => {
+  const { fileSizes, freeSpaces } = state;
 
   let checksum = 0;
 
@@ -121,6 +129,83 @@ export const fileSystemChecksum = (): number => {
   return checksum;
 };
 
+export const defragFileSystemChecksum = (): number => {
+  const { fileSizes, freeSpaces, spaceFiles } = state;
+
+  let checksum = 0;
+
+  let minSpaceId = 0;
+  let spaceId: number;
+  let size: number;
+
+  const movedFiles = new Set<number>();
+
+  // move files
+  for (
+    let fileId = fileSizes.length - 1;
+    fileId >= 0 && fileId > minSpaceId;
+    fileId--
+  ) {
+    size = fileSizes[fileId];
+    spaceId = minSpaceId;
+
+    // search for enough space
+    while (freeSpaces[spaceId] < size && spaceId < fileId) {
+      spaceId++;
+    }
+
+    // file can't be moved
+    if (spaceId >= fileId) {
+      continue;
+    }
+
+    // move file into free space
+    if (!spaceFiles.has(spaceId)) {
+      spaceFiles.set(spaceId, [fileId]);
+    } else {
+      spaceFiles.get(spaceId)?.push(fileId);
+    }
+    // keep track which files were moved
+    movedFiles.add(fileId);
+
+    // reduce remaining
+    freeSpaces[spaceId] -= size;
+
+    // space is filled, so no need to keep checking
+    if (spaceId === minSpaceId) {
+      while (freeSpaces[spaceId] === 0) {
+        minSpaceId++;
+        spaceId++;
+      }
+    }
+  }
+
+  // defragging done, so let's calculate checksum
+  let idx = 0;
+  for (let id = 0; id < fileSizes.length; id++) {
+    size = fileSizes[id];
+
+    // unmoved
+    if (!movedFiles.has(id)) {
+      checksum += filePartChecksum(id, idx, size);
+    }
+    // whether file is there or not, it's taking up space
+    idx += size;
+
+    // moved files, if any
+    spaceFiles.get(id)?.forEach((movedId) => {
+      size = fileSizes[movedId];
+      checksum += filePartChecksum(movedId, idx, size);
+
+      idx += size;
+    });
+
+    idx += freeSpaces[id];
+  }
+
+  return checksum;
+};
+
 export function solve(input: string): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
 
@@ -128,15 +213,15 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 1 --------------------------------- */
 
-  const part1: number = fileSystemChecksum(); // not solved yet
+  const part1: number = compactFileSystemChecksum(); // not solved yet
   const part1fmt = chalk.underline.white(part1);
   let description = `Part 1 result is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  parseInput(input);
+  //   parseInput(input);
 
-  const part2: number = 0; // not solved yet
+  const part2: number = defragFileSystemChecksum(); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and part 2 is ${part2fmt}.`;
 
