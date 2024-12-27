@@ -75,7 +75,7 @@ export const parseInput = (input: string): void => {
     }
   }
 
-  // lets sort the points from high to low
+  // let's sort the points from high to low
   points.sort((a, b) => b.height - a.height);
 
   // link points to relevant points (1 lower or higher)
@@ -105,22 +105,16 @@ export const calculateTrailInfo = (): TrailInfo => {
   let trailHeads = 0;
 
   // distribute #trials and #tops downwards
-  points.forEach(({ x, y, height, declining, trails, tops }, idx) => {
+  points.forEach(({ height, declining, trails, tops }) => {
     switch (height) {
+      // update info
       case 0:
-        // update score
         trailRating += trails;
         trailScore += tops.size;
-        if (tops.size === 6) {
-          tops.forEach(({ x: xT, y: yT, height: heightT }) => {
-            // console.log(xT, yT, "at height", heightT);
-          });
-        }
-
         trailHeads++;
         break;
+      // increase the trail outcome for the lower adjacent points
       default:
-        // increase the trail outcome for the lower adjacent points
         declining.forEach((point) => {
           point.trails += trails;
           tops.forEach((top) => point.tops.add(top));
@@ -146,8 +140,6 @@ export function solve(input: string): SolveResult {
   const [cols, rows] = island;
 
   const { trailScore, trailRating, trailHeads } = calculateTrailInfo();
-
-  console.log("the result is ", trailScore, trailRating);
 
   const part1: number = trailScore;
   const part1fmt = chalk.underline.white(part1);
