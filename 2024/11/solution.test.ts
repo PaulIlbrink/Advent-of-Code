@@ -38,14 +38,14 @@ describe(`Day ${__dirname} functions`, () => {
 
     const { stones } = state;
 
-    expect(stones).toBeArray();
-    expect(stones).toHaveLength(5);
-    expect(stones).toEqual([0, 1, 10, 99, 999]);
+    expect(stones).toBeInstanceOf(Map);
+    expect(stones.size).toBe(5);
+    expect(stones.keys().toArray()).toEqual([0, 1, 10, 99, 999]);
 
     blink();
 
-    expect(stones).toEqual([1, 2024, 1, 0, 9, 9, 2021976]);
-    expect(stones).toHaveLength(7);
+    expect(stones.keys().toArray()).toEqual([1, 2024, 0, 9, 2021976]);
+    expect(stones.size).toBe(5);
   });
 });
 

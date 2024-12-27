@@ -1,21 +1,36 @@
 import chalk from "chalk";
 import { numberOfDigits } from "../07/solution";
 
-export type Stone = number;
-
+/* ---------------------------------- Types --------------------------------- */
+export type Stone = number; // { value: number; amount: number; nextStones: number[]; }
+export type StoneMap = Map<Stone, number>;
 export type State = {
-  stones: Stone[];
-};
-export const state: State = {
-  stones: [],
+  stones: StoneMap;
 };
 
+/* ---------------------------------- State --------------------------------- */
+export const state: State = {
+  stones: new Map(),
+};
+
+/* -------------------------------- Functions ------------------------------- */
 export const resetState = () => {
-  state.stones.length = 0;
+  state.stones.clear();
 };
 
 export const parseInput = (input: string): void => {
-  state.stones = input.split(" ").map(Number);
+  const { stones } = state;
+
+  const stoneArr = input.split(" ").map(Number);
+
+  // add a single stone to our stone map
+  stoneArr.forEach((stone) => stones.set(stone, 1));
+
+  // sanity check
+  if (stones.size !== stoneArr.length)
+    throw new Error(
+      "We are kinda only expecting to have unique stones here without any duplicates"
+    );
 };
 
 export const change = (stone: Stone): Stone[] => {
@@ -33,24 +48,39 @@ export const change = (stone: Stone): Stone[] => {
 };
 
 export const blink = (times = 1): number => {
-  const { stones } = state;
-  
   for (let i = 0; i < times; i++) {
-    changeStones();
+    changeStones(i);
   }
 
-  return stones.length;
+  return countStones();
 };
 
-export const changeStones = () => {
+export const countStones = () => {
   const { stones } = state;
-  const lastLength = stones.length;
 
-  for (let i = 0; i < lastLength; i++) {
-    stones.push(...change(stones[i]));
+  const totalStones = stones
+    .values()
+    .reduce((total, amount) => (total += amount), 0);
+
+  return totalStones;
+};
+
+export const changeStones = (debug: any) => {
+  const { stones } = state;
+
+  const blinkMap: StoneMap = new Map();
+
+  for (let [stone, amount] of stones) {
+    change(stone).forEach((newStone) => {
+      const blinkAmount: number = blinkMap.get(newStone) || 0;
+      blinkMap.set(newStone, amount + blinkAmount);
+    });
   }
 
-  stones.splice(0, lastLength);
+  stones.clear();
+  for (let [stone, amount] of blinkMap) {
+    stones.set(stone, amount);
+  }
 };
 
 export function solve(input: string): SolveResult {
@@ -60,16 +90,17 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
+  const { stones } = state;
 
   const part1: number = blink(25);
   const part1fmt = chalk.underline.white(part1);
-  let description = `Part 1 result is ${part1fmt}`;
+  let description = `After blinking 25 times there are ${part1fmt} stones, but only ${stones.size} unique ones`;
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  const part2: number = 0; //  blink(75 - 25); // not solved yet
+  const part2: number = blink(75 - 25); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and after blinking 75 there are ${part2fmt} stones, but only ${stones.size} unique ones.`;
 
   /* --------------------------------- Result --------------------------------- */
 
