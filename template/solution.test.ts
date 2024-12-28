@@ -19,7 +19,7 @@ describe(`Day ${__dirname} functions`, () => {
 });
 
 describe(`Day ${__dirname} example`, () => {
-  test("Part 1 example", () => {
+  test.skip("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
     expect(part1).toBe(123);
