@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
 import {
+  ALL_DIRECTIONS,
   Dir,
   parseInput,
   populateMatrix,
@@ -19,6 +20,10 @@ beforeEach(() => {
 });
 
 describe(`Day ${__dirname} functions`, () => {
+  test("ALL_DIRECTIONS", () => {
+    expect(ALL_DIRECTIONS).toEqual([Dir.N, Dir.E, Dir.S, Dir.W]);
+  });
+
   test("populateMatrix", () => {
     populateMatrix(exampleInput);
 
@@ -34,7 +39,7 @@ describe(`Day ${__dirname} functions`, () => {
       y: 0,
       plant: "R",
       adjacent: [],
-      fences: 0,
+      fenceDirections: [],
       regionIdx: -1,
     });
     expect(matrix.at(7)?.at(5)).toEqual({
@@ -42,7 +47,7 @@ describe(`Day ${__dirname} functions`, () => {
       y: 5,
       plant: "J",
       adjacent: [],
-      fences: 0,
+      fenceDirections: [],
       regionIdx: -1,
     });
 
@@ -61,7 +66,8 @@ describe(`Day ${__dirname} functions`, () => {
 
     let plot: Plot = matrix[0][0];
     expect(plot.plant).toBe("R");
-    expect(plot.fences).toBe(2);
+    expect(plot.fenceDirections).toContainValues([Dir.N, Dir.W]);
+    expect(plot.fenceDirections).toHaveLength(2);
 
     plot = matrix[1][0];
     expect(plot.plant).toBe("R");
@@ -76,11 +82,11 @@ describe(`Day ${__dirname} functions`, () => {
     expect(plot.adjacent[Dir.S]?.plant).toBe(plot.plant);
     expect(plot.adjacent[Dir.W]?.plant).toBe(plot.plant);
 
-    expect(plot.fences).toBe(1);
+    expect(plot.fenceDirections).toHaveLength(1);
 
     plot = matrix[2][4];
     expect(plot.plant).toBe("V");
-    expect(plot.fences).toBe(2);
+    expect(plot.fenceDirections).toHaveLength(2);
   });
 
   test("updateRegions", () => {
@@ -169,10 +175,10 @@ describe(`Day ${__dirname} example`, () => {
     expect(part1).toBe(1930);
   });
 
-  test.skip("Part 2 example", () => {
+  test("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
-    expect(part2).toBe(123);
+    expect(part2).toBe(1206);
   });
 
   // Add more test cases if needed

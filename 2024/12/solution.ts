@@ -6,13 +6,17 @@ export enum Dir {
   S = 2,
   W = 3,
 }
+export const ALL_DIRECTIONS: Dir[] = Object.values(Dir).filter(
+  (val) => typeof val === "number"
+) as Dir[];
+
 export type Plant = string;
 export type Plot = {
   x: number;
   y: number;
   plant: Plant;
   adjacent: Array<Plot | undefined>;
-  fences: number;
+  fenceDirections: Dir[];
   regionIdx: number;
 };
 export type Region = Set<Plot>;
@@ -22,6 +26,7 @@ export type State = {
   matrix: Plot[][];
   plots: Plot[];
 };
+
 export const state: State = {
   regions: new Map(),
   matrix: [],
@@ -54,7 +59,7 @@ export const populateMatrix = (input: string) => {
         y,
         plant: char,
         adjacent: [],
-        fences: 0,
+        fenceDirections: [],
         regionIdx: -1,
       };
 
@@ -83,7 +88,10 @@ export const updateAdjacentAndFences = () => {
         ]
       );
 
-      plot.fences = adjacent.filter((p) => plant !== p?.plant).length;
+      plot.fenceDirections = adjacent.reduce((fenceDirs, adj, dir) => {
+        if (plant !== adj?.plant) fenceDirs.push(dir);
+        return fenceDirs;
+      }, Array<Dir>());
     });
   });
 };
@@ -156,7 +164,7 @@ export const updateRegions = () => {
   });
 };
 
-export const calculateFencePrice = () => {
+export const calculateFencePrice = (): number => {
   const { regions } = state;
   let fencePrice = 0;
 
@@ -165,12 +173,99 @@ export const calculateFencePrice = () => {
       const area = region.size;
       const fences = region
         .values()
-        .reduce((total, plot) => total + plot.fences, 0);
+        .reduce((total, plot) => total + plot.fenceDirections.length, 0);
       fencePrice += area * fences;
     });
   });
 
   return fencePrice;
+};
+
+export const hasFence = (
+  region: Region,
+  x: number,
+  y: Number,
+  direction: Dir
+): boolean => {
+  const regionPlot = region
+    .values()
+    .find((plot) => plot.x === x && plot.y === y);
+
+  // it's not a plot in this region, so don't bother checking fences
+  if (!regionPlot) return false;
+
+  // check if the plot has a fence on the direction
+  return regionPlot.fenceDirections.includes(direction);
+};
+
+export const sideContinues = (plot: Plot, side: Dir): boolean => {
+  return false;
+};
+
+export const calculateCorners = (plot: Plot, region: Region): number => {
+  const { fenceDirections } = plot;
+  const fences = fenceDirections.length;
+
+  // no fences no corners, or sides have fences which equals 4 corners
+  if (fences === 0 || fences === 4) return fences;
+
+  /**
+   * for the remaining cases it's impossible to determine the exact amount of corners without looking at surrounding plots, because we're searching for reverse angles
+   * - 3 fences, at least 2 corners but also could be 3 (or 4, but that one should count towards another plot)
+   * - 2 fences, when they connect N+E or S+W for example at last 1 corner but possibly 2 (or 3)
+   *             when they're opposite of eachother at least 0 but could be 1 (or 2) for each side
+   * - 1 fences, basically the same situation as a single side of the situation with 2 fences 0 or 1 (or 2)
+   *
+   * To not count double corners (on surrounding plots) let's just look towards the clockwise direction
+   */
+
+  const corners = fenceDirections.reduce((plotCorners: number, dir: Dir) => {
+    const nextDir: Dir = (dir + 1) % 4;
+
+    // nextDir is fenced, so it's a normal "closed" corner, so let's count it
+    if (fenceDirections.includes(nextDir)) return plotCorners + 1;
+
+    // nextDir is open, check if next plot continues the fence/side or if it's a reverse corner
+    let plotX = plot.x,
+      plotY = plot.y;
+    switch (nextDir) {
+      case Dir.N:
+      case Dir.S:
+        plotY += -1 + nextDir;
+        break;
+      case Dir.E:
+      case Dir.W:
+      default:
+        plotX += 2 - nextDir;
+        break;
+    }
+
+    // the fence doesn't continue in a straight line, so it's a reverse corner
+    const sideContinues = hasFence(region, plotX, plotY, dir);
+    if (!sideContinues) plotCorners += 1;
+
+    return plotCorners;
+  }, 0);
+
+  return corners;
+};
+
+export const calculateBulkFencePrice = (): number => {
+  const { regions } = state;
+
+  let bulkFencePrice = 0;
+
+  regions.forEach((plantRegions) => {
+    plantRegions.forEach((region) => {
+      const regionArea = region.size;
+      const regionCorners = region
+        .values()
+        .reduce((total, plot) => total + calculateCorners(plot, region), 0);
+      bulkFencePrice += regionArea * regionCorners;
+    });
+  });
+
+  return bulkFencePrice;
 };
 
 export function solve(input: string): SolveResult {
@@ -180,12 +275,12 @@ export function solve(input: string): SolveResult {
   /* --------------------------------- Part 1 --------------------------------- */
   const part1: number = calculateFencePrice();
   const part1fmt = chalk.underline.white(part1);
-  let description = `Part 1 result is ${part1fmt}`;
+  let description = `The total fence costs for all regions is  ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+  const part2: number = calculateBulkFencePrice(); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, after applying bulk discount the costs are reduced to ${part2fmt}.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };
