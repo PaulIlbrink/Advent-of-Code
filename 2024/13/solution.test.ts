@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { resetState, solve } from "./solution";
+import { parseInput, resetState, solve } from "./solution";
 import { resolve } from "path";
 
 let exampleInput: string;
@@ -11,10 +11,16 @@ beforeAll(() => {
 });
 
 describe(`Day ${__dirname} functions`, () => {
-  test.skip("some day specific function", () => {
-    const foo = null;
+  test("parseInput", () => {
+    expect(() => parseInput(exampleInput)).not.toThrowError();
 
-    expect(foo).toBeTrue();
+    expect(() => parseInput("foo bar")).toThrowError(/^Invalid input/);
+
+    const incompleteInput = exampleInput.split("\n").slice(0, 5).join("\n");
+    expect(exampleInput).toStartWith(incompleteInput);
+    expect(exampleInput).not.toEqual(incompleteInput);
+    
+    expect(() => parseInput(incompleteInput)).toThrowError(/^Incomplete input/); // doesn't work
   });
 });
 
