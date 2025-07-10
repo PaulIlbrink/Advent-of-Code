@@ -104,6 +104,60 @@ export const getSafetyFactor = () => {
   return safetyFactor;
 };
 
+export const coordToKey = ([x, y]: Coordinate): string => `${x},${y}`;
+
+export const getInlineRobotPercentage = (): number => {
+  const { robots } = state;
+  const robotPositions = new Set<string>(
+    robots.map(([position]) => coordToKey(position))
+  );
+
+  const offsets = [-1, 0, 1];
+  const inlineRobotCount = robots.reduce((acc, [[x, y]]) => {
+    let neighbourCount = 0;
+
+    offsets.forEach((dX) => {
+      offsets.forEach((dY) => {
+        if (neighbourCount > 1) return;
+
+        if (dX === 0 && dY === 0) return;
+
+        if (robotPositions.has(coordToKey([x + dX, y + dY]))) neighbourCount++;
+      });
+    });
+
+    if (neighbourCount === 2) return acc + 1;
+
+    return acc;
+  }, 0);
+
+  return inlineRobotCount / robots.length;
+};
+
+export const moveRobotsInline = (
+  maxMoves = 100,
+  minPercentage = 0.1
+): number => {
+  let moves = 0;
+  let bestPercentage = 0;
+  let bestPercentageAfterMoves = 0;
+
+  while (moves < maxMoves && bestPercentage < minPercentage) {
+    moveRobots(1);
+    moves++;
+
+    const inlinePercentage = getInlineRobotPercentage();
+    if (inlinePercentage <= bestPercentage) continue;
+
+    bestPercentage = bestPercentage = inlinePercentage;
+    bestPercentageAfterMoves = moves;
+  }
+
+  if (bestPercentage < minPercentage) return -1;
+
+  return moves;
+};
+
 export function solve(input: string): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
   parseInput(input);
@@ -114,12 +168,20 @@ export function solve(input: string): SolveResult {
 
   const part1: number = getSafetyFactor();
   const part1fmt = chalk.underline.white(part1);
-  let description = `The safetyfactor after 100 seconds is ${part1fmt}`;
+  let description = `The safety factor after 100 seconds is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+  resetState();
+  parseInput(input);
+
+  const maxMoves = 10000;
+  const easterEggPercentage = 0.5;
+
+  const part2: number = moveRobotsInline(maxMoves, easterEggPercentage);
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and after ${part2fmt} seconds at least ${
+    easterEggPercentage * 100
+  }% of robots are inline and likely display the easter egg.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };

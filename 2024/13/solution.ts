@@ -157,7 +157,7 @@ export function solve(input: string): SolveResult {
   solveMachines();
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = calculateTokens(); // not solved yet
+  const part1: number = calculateTokens();
   const part1fmt = chalk.underline.white(part1);
   let description = `To win all possible prizes you need to spend ${part1fmt} tokens`;
 
@@ -165,7 +165,7 @@ export function solve(input: string): SolveResult {
 
   solveMachines(10000000000000);
 
-  const part2: number = calculateTokens(); // not solved yet
+  const part2: number = calculateTokens();
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and after correcting the conversion mistake you need to spend ${part2fmt} tokens.`;
 

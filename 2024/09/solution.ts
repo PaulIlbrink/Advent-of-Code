@@ -213,7 +213,7 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 1 --------------------------------- */
 
-  const part1: number = compactFileSystemChecksum(); // not solved yet
+  const part1: number = compactFileSystemChecksum();
   const part1fmt = chalk.underline.white(part1);
   let description = `Part 1 result is ${part1fmt}`;
 
@@ -221,7 +221,7 @@ export function solve(input: string): SolveResult {
 
   //   parseInput(input);
 
-  const part2: number = defragFileSystemChecksum(); // not solved yet
+  const part2: number = defragFileSystemChecksum();
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and part 2 is ${part2fmt}.`;
 

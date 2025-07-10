@@ -278,7 +278,7 @@ export function solve(input: string): SolveResult {
   let description = `The total fence costs for all regions is  ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = calculateBulkFencePrice(); // not solved yet
+  const part2: number = calculateBulkFencePrice();
   const part2fmt = chalk.underline.yellow(part2);
   description += `, after applying bulk discount the costs are reduced to ${part2fmt}.`;
 

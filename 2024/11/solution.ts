@@ -98,7 +98,7 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  const part2: number = blink(75 - 25); // not solved yet
+  const part2: number = blink(75 - 25);
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and after blinking 75 there are ${part2fmt} stones, but only ${stones.size} unique ones.`;
 
