@@ -11,13 +11,16 @@ beforeAll(() => {
 });
 
 describe(`Day ${__dirname} functions`, () => {
-  test("some day specific function", () => {
-    let testMove = turn(50, 15);
+  test("turn", () => {
+    let testMove = turn(15);
     expect(testMove).toBeInteger();
     expect(testMove).toBe(65);
 
-    expect(turn(65, 65)).toBe(30);
-    expect(turn(65, -150)).toBe(15);
+    resetState();
+    expect(turn(65)).toBe(30);
+
+    resetState();
+    expect(turn(-150)).toBe(15);
   });
 });
 
@@ -28,10 +31,10 @@ describe(`Day ${__dirname} example`, () => {
     expect(part1).toBe(3);
   });
 
-  test.skip("Part 2 example", () => {
+  test("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
-    expect(part2).toBe(123);
+    expect(part2).toBe(6);
   });
 
   // Add more test cases if needed

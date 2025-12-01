@@ -4,13 +4,19 @@ export type State = {
   position: number;
   moves: number[];
   history: number[];
+  includePasses: boolean;
 };
-export const state: State = { position: 50, moves: [], history: [] };
+export const state: State = {
+  position: 50,
+  moves: [],
+  history: [],
+  includePasses: false,
+};
 
 export const resetState = () => {
   state.position = 50;
   state.moves = [];
-  state.history = [];
+  state.includePasses = false;
 };
 
 const parseInput = (input: string): void => {
@@ -28,20 +34,39 @@ const parseInput = (input: string): void => {
   });
 };
 
-export const turn = (start: number, rotation: number): number => {
-  return (start + rotation + 100) % 100;
+export const turn = (rotation: number): number => {
+  let { position: start, includePasses } = state;
+  let zeros = 0;
+
+  const raw = start + rotation;
+  const end = (raw + 100) % 100;
+
+  state.position = end;
+
+  if (end === 0) zeros++;
+
+  if (!includePasses) {
+    return zeros;
+  }
+
+  if (raw < 0) {
+    zeros += Math.ceil((-1 * (raw + start)) / 100);
+  } else {
+    zeros += Math.floor(raw / 100);
+  }
+
+  return zeros;
 };
 
 export const openSafe = () => {
-  let { position, moves, history } = state;
+  let { moves } = state;
 
-  history.push(position);
+  let zeros = 0;
   for (let move of moves) {
-    state.position = turn(state.position, move);
-    history.push(state.position);
+    zeros += turn(move);
   }
 
-  return history.filter((pos) => pos === 0).length;
+  return zeros;
 };
 
 export function solve(input: string): SolveResult {
@@ -54,7 +79,11 @@ export function solve(input: string): SolveResult {
   let description = `Part 1 result is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+  resetState();
+  parseInput(input);
+  state.includePasses = true;
+
+  const part2: number = openSafe(); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and part 2 is ${part2fmt}.`;
 
