@@ -12,28 +12,41 @@ beforeAll(() => {
 
 describe(`Day ${__dirname} functions`, () => {
   test("turn", () => {
-    let testMove = turn(15);
-    expect(testMove).toBeInteger();
-    expect(testMove).toBe(0);
+    let [position, zeros] = turn(50, 25);
+    expect(position).toBe(75);
+    expect(zeros).toBe(0);
 
-    // includePasses = false;
-    expect(turn(65)).toBe(0);
+    [position, zeros] = turn(50, -68);
+    expect(position).toBe(82);
+    expect(zeros).toBe(1);
 
-    resetState();
-    state.includePasses = true;
-    expect(turn(65)).toBe(1);
+    [position, zeros] = turn(50, -385);
+    expect(position).toBe(65);
+    expect(zeros).toBe(4);
 
-    resetState();
-    state.includePasses = true;
-    expect(turn(350)).toBe(4);
+    [position, zeros] = turn(50, -50);
+    expect(position).toBe(0);
+    expect(zeros).toBe(1);
 
-    resetState();
-    state.includePasses = true;
-    turn(-50);
-    expect(state.position).toBe(0);
+    [position, zeros] = turn(50, 50);
+    expect(position).toBe(0);
+    expect(zeros).toBe(1);
 
-    expect(turn(-599)).toBe(5);
-    expect(state.position).toBe(1);
+    [position, zeros] = turn(50, -375);
+    expect(position).toBe(75);
+    expect(zeros).toBe(4);
+
+    [position, zeros] = turn(50, 375);
+    expect(position).toBe(25);
+    expect(zeros).toBe(4);
+
+    [position, zeros] = turn(50, 325);
+    expect(position).toBe(75);
+    expect(zeros).toBe(3);
+
+    [position, zeros] = turn(0, -5);
+    expect(position).toBe(95);
+    expect(zeros).toBe(0);
   });
 });
 
@@ -49,6 +62,4 @@ describe(`Day ${__dirname} example`, () => {
 
     expect(part2).toBe(6);
   });
-
-  // Add more test cases if needed
 });

@@ -1,76 +1,76 @@
 import chalk from "chalk";
 
 export type State = {
-  position: number;
   moves: number[];
-  history: number[];
-  includePasses: boolean;
 };
+export type Turn = [dialPosition: number, zeroTicks: number];
+export type SafeCodes = [simple: number, advanced: number];
+
 export const state: State = {
-  position: 50,
   moves: [],
-  history: [],
-  includePasses: false,
 };
 
 export const resetState = () => {
-  state.position = 50;
-  state.moves = [];
-  state.includePasses = false;
+  state.moves.length = 0;
 };
 
 const parseInput = (input: string): void => {
   resetState();
+
   const lines = input.split("\n").map((line) => line.trim());
 
-  const {} = state;
+  const { moves } = state;
 
   lines.forEach((line) => {
     if (line.length === 0) return;
 
     let move = parseInt(line.substring(1), 10);
-    if (line.charAt(0) === "L") move = -move;
-    state.moves.push(move);
+
+    if (line.charAt(0) === "L") move *= -1;
+
+    moves.push(move);
   });
 };
 
-export const turn = (rotation: number): number => {
-  let { position: start, includePasses } = state;
-  let zeros = 0;
+export const turn = (position: number, rotation: number): Turn => {
+  let zeros = Math.floor(Math.abs(rotation) / 100);
+  let newPosition = position + (rotation % 100);
 
-  const raw = start + rotation;
-  const end = ((raw % 100) + 100) % 100;
+  if (newPosition < 0) {
+    newPosition += 100;
 
-  state.position = end;
+    if (position !== 0) zeros++;
+  } else if (newPosition >= 100) {
+    if (newPosition > 100) zeros++;
 
-  if (end === 0) zeros++;
-
-  if (!includePasses) {
-    return zeros;
+    newPosition -= 100;
   }
 
-  if (raw <= 0) {
-    zeros += Math.ceil((-1 * raw) / 100);
-    if (start === 0) zeros--;
-  } else if (raw > 100) {
-    zeros += Math.floor(raw / 100);
-    if (end === 0) {
-      zeros--;
-    }
-  }
+  if (newPosition === 0) zeros++;
 
-  return zeros;
+  return [newPosition, zeros];
 };
 
-export const openSafe = () => {
+export const openSafe = (): SafeCodes => {
   let { moves } = state;
 
-  let zeros = 0;
-  for (let move of moves) {
-    zeros += turn(move);
-  }
+  let dialPosition = 50;
+  let zeros;
 
-  return zeros;
+  const codes: SafeCodes = moves.reduce(
+    ([simple, advanced], move) => {
+      [dialPosition, zeros] = turn(dialPosition, move);
+
+      if (dialPosition === 0) simple++;
+
+      advanced += zeros;
+
+      return [simple, advanced];
+    },
+    [0, 0]
+  );
+
+  return codes;
 };
 
 export function solve(input: string): SolveResult {
@@ -78,16 +78,11 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = openSafe();
+  const [part1, part2] = openSafe();
   const part1fmt = chalk.underline.white(part1);
   let description = `Part 1 result is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  resetState();
-  parseInput(input);
-  state.includePasses = true;
-
-  const part2: number = openSafe(); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and part 2 is ${part2fmt}.`;
 
