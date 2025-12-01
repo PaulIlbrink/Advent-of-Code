@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
 import { resetState, solve } from "./solution";
-import { resolve } from "path";
+import path, { resolve } from "path";
 
 let exampleInput: string;
 const dayNumber = path.basename(__dirname);
