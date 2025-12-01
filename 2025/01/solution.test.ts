@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { resetState, solve } from "./solution";
+import { resetState, solve, turn } from "./solution";
 import { resolve } from "path";
 
 let exampleInput: string;
@@ -11,18 +11,21 @@ beforeAll(() => {
 });
 
 describe(`Day ${__dirname} functions`, () => {
-  test.skip("some day specific function", () => {
-    const foo = null;
+  test("some day specific function", () => {
+    let testMove = turn(50, 15);
+    expect(testMove).toBeInteger();
+    expect(testMove).toBe(65);
 
-    expect(foo).toBeTrue();
+    expect(turn(65, 65)).toBe(30);
+    expect(turn(65, -150)).toBe(15);
   });
 });
 
 describe(`Day ${__dirname} example`, () => {
-  test.skip("Part 1 example", () => {
+  test("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
-    expect(part1).toBe(123);
+    expect(part1).toBe(3);
   });
 
   test.skip("Part 2 example", () => {

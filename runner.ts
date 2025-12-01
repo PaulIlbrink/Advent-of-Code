@@ -5,7 +5,7 @@ import { performance } from "perf_hooks";
 
 // Parse command-line arguments
 const args = process.argv.slice(2);
-const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2024";
+const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2025";
 const dayArg = args.find((arg) => /^\d{1,2}$/.test(arg));
 const isBenchmark = args.includes("--benchmark");
 const useExample = args.includes("--example");

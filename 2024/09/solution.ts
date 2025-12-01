@@ -219,7 +219,7 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  //   parseInput(input);
+  parseInput(input);
 
   const part2: number = defragFileSystemChecksum();
   const part2fmt = chalk.underline.yellow(part2);
