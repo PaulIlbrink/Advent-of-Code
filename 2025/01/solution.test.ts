@@ -1,16 +1,17 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { resetState, solve, turn, state } from "./solution";
-import { resolve } from "path";
+import { resetState, solve, turn } from "./solution";
+import path, { resolve } from "path";
 
 let exampleInput: string;
+const dayNumber = path.basename(__dirname);
 
 beforeAll(() => {
   exampleInput = readFileSync(resolve(__dirname, "input.example.txt"), "utf-8");
   resetState();
 });
 
-describe(`Day ${__dirname} functions`, () => {
+describe(`Day ${dayNumber} functions`, () => {
   test("turn", () => {
     let [position, zeros] = turn(50, 25);
     expect(position).toBe(75);
@@ -50,7 +51,7 @@ describe(`Day ${__dirname} functions`, () => {
   });
 });
 
-describe(`Day ${__dirname} example`, () => {
+describe(`Day ${dayNumber} example`, () => {
   test("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 

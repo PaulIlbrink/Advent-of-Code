@@ -4,13 +4,14 @@ import { resetState, solve } from "./solution";
 import { resolve } from "path";
 
 let exampleInput: string;
+const dayNumber = path.basename(__dirname);
 
 beforeAll(() => {
   exampleInput = readFileSync(resolve(__dirname, "input.example.txt"), "utf-8");
   resetState();
 });
 
-describe(`Day ${__dirname} functions`, () => {
+describe(`Day ${dayNumber} functions`, () => {
   test.skip("some day specific function", () => {
     const foo = null;
 
@@ -18,7 +19,7 @@ describe(`Day ${__dirname} functions`, () => {
   });
 });
 
-describe(`Day ${__dirname} example`, () => {
+describe(`Day ${dayNumber} example`, () => {
   test.skip("Part 1 example", () => {
     const { part1 } = solve(exampleInput);
 
