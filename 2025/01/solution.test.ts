@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { resetState, solve, turn } from "./solution";
+import { resetState, solve, turn, state } from "./solution";
 import { resolve } from "path";
 
 let exampleInput: string;
@@ -14,13 +14,26 @@ describe(`Day ${__dirname} functions`, () => {
   test("turn", () => {
     let testMove = turn(15);
     expect(testMove).toBeInteger();
-    expect(testMove).toBe(65);
+    expect(testMove).toBe(0);
+
+    // includePasses = false;
+    expect(turn(65)).toBe(0);
 
     resetState();
-    expect(turn(65)).toBe(30);
+    state.includePasses = true;
+    expect(turn(65)).toBe(1);
 
     resetState();
-    expect(turn(-150)).toBe(15);
+    state.includePasses = true;
+    expect(turn(350)).toBe(4);
+
+    resetState();
+    state.includePasses = true;
+    turn(-50);
+    expect(state.position).toBe(0);
+
+    expect(turn(-599)).toBe(5);
+    expect(state.position).toBe(1);
   });
 });
 

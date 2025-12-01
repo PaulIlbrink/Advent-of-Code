@@ -39,7 +39,7 @@ export const turn = (rotation: number): number => {
   let zeros = 0;
 
   const raw = start + rotation;
-  const end = (raw + 100) % 100;
+  const end = ((raw % 100) + 100) % 100;
 
   state.position = end;
 
@@ -49,10 +49,14 @@ export const turn = (rotation: number): number => {
     return zeros;
   }
 
-  if (raw < 0) {
-    zeros += Math.ceil((-1 * (raw + start)) / 100);
-  } else {
+  if (raw <= 0) {
+    zeros += Math.ceil((-1 * raw) / 100);
+    if (start === 0) zeros--;
+  } else if (raw > 100) {
     zeros += Math.floor(raw / 100);
+    if (end === 0) {
+      zeros--;
+    }
   }
 
   return zeros;
@@ -74,7 +78,7 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = openSafe(); // not solved yet
+  const part1: number = openSafe();
   const part1fmt = chalk.underline.white(part1);
   let description = `Part 1 result is ${part1fmt}`;
 
