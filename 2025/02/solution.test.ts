@@ -1,6 +1,13 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { resetState, solve, lastDigits, state, testSequence } from "./solution";
+import {
+  resetState,
+  solve,
+  lastDigits,
+  state,
+  testSequence,
+  isSequence,
+} from "./solution";
 import path, { resolve } from "path";
 
 let exampleInput: string;
@@ -22,6 +29,13 @@ describe(`Day ${dayNumber} functions`, () => {
     expect(lastDigits(1234, 2)).toBe(34);
 
     expect(lastDigits(1234, 4)).toBe(1234);
+  });
+
+  test("isSequence", () => {
+    expect(isSequence(123123123123, 3)).toBeTrue();
+    expect(isSequence(123123123123, 6)).toBeTrue();
+    expect(isSequence(123123123123, 9)).toBeFalse();
+    expect(isSequence(123123123123, 12)).toBeFalse();
   });
 });
 

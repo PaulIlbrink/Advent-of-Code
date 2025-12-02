@@ -19,6 +19,29 @@ export const lastDigits = (productId: number, digits: number): number => {
   return productId % Math.pow(10, digits);
 };
 
+export const isSequence = (
+  productId: number,
+  sequenceLength: number
+): boolean => {
+  const digits = numberOfDigits(productId);
+
+  // no sequences possible
+  if (digits % sequenceLength !== 0) return false;
+
+  // no repetitions
+  const repetitions = digits / sequenceLength;
+  if (repetitions <= 1) return false;
+
+  // check all sequences
+  const sequence = lastDigits(productId, sequenceLength);
+  let calcSequence = 0;
+  for (let rep = 0; rep < repetitions; rep++) {
+    calcSequence += Math.pow(10, rep) * calcSequence;
+  }
+
+  return calcSequence === productId;
+};
+
 export const testSequence = (productId: number): boolean => {
   if (productId < 10) return false;
 
@@ -53,10 +76,12 @@ export const checkForSequnces = (): number => {
   const { productRanges } = state;
 
   let sequenceTotal = 0;
+  let totalProducts = 0;
 
   productRanges.forEach(([start, end]) => {
     // console.log("checking product range", start, end);
     for (let productId = start; productId <= end; productId++) {
+      totalProducts++;
       const validProduct = !testSequence(productId);
 
       if (validProduct) continue;
@@ -64,6 +89,8 @@ export const checkForSequnces = (): number => {
       sequenceTotal += productId;
     }
   });
+
+  console.log(`There were ${totalProducts} products`);
 
   return sequenceTotal;
 };
