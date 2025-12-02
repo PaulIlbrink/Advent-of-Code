@@ -26,33 +26,38 @@ export const isSequence = (
   const digits = numberOfDigits(productId);
 
   // no sequences possible
-  if (digits % sequenceLength !== 0) return false;
+  if (digits % sequenceLength !== 0) {
+    console.log("seq remainder !== 0");
+    return false;
+  }
 
   // no repetitions
   const repetitions = digits / sequenceLength;
-  if (repetitions <= 1) return false;
+  if (repetitions <= 1) {
+    console.log("repetitions <= 1", repetitions);
+    return false;
+  }
 
   // check all sequences
   const sequence = lastDigits(productId, sequenceLength);
   let calcSequence = 0;
   for (let rep = 0; rep < repetitions; rep++) {
-    calcSequence += Math.pow(10, rep) * calcSequence;
+    calcSequence += Math.pow(10, rep * sequenceLength) * sequence;
   }
 
   return calcSequence === productId;
 };
 
-export const testSequence = (productId: number): boolean => {
+export const testSequence = (productId: number, simple = true): boolean => {
   if (productId < 10) return false;
 
   const digits = numberOfDigits(productId);
-  if (digits % 2 !== 0) return false;
 
-  const halfDigits = digits / 2;
+  let sequenceLength = Math.floor(digits / 2);
 
-  const half = lastDigits(productId, halfDigits);
+  // TODO: try large to small
 
-  return productId === Math.pow(10, halfDigits) * half + half;
+  return false;
 };
 
 const parseInput = (input: string): void => {
