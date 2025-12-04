@@ -4,14 +4,8 @@
   "module": "runner.ts",
   "scripts": {
     "start": "bun runner.ts",
-    "run:day": "bun runner.ts 2025 1",
-    "run:year": "bun runner.ts 2025",
+    "run": "bun runner.ts",
     "watch": "bun --watch runner.ts",
-    "watch:day": "bun --watch runner.ts 2025 1",
-    "watch:year": "bun --watch runner.ts 2025",
-    "benchmark": "bun runner.ts 2025 --benchmark",
-    "benchmark:day": "bun runner.ts 2025 1 --benchmark",
-    "benchmark:year": "bun runner.ts 2025 --benchmark",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },

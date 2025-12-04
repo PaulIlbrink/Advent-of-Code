@@ -5,15 +5,39 @@ import { performance } from "perf_hooks";
 
 // Parse command-line arguments
 const args = process.argv.slice(2);
-const yearArg = args.find((arg) => /^\d{4}$/.test(arg)) || "2025";
-const dayArg = args.find((arg) => /^\d{1,2}$/.test(arg));
+
+// Flags
 const isBenchmark = args.includes("--benchmark");
 const useExample = args.includes("--example");
+
+// Filter flags
+const positional = args.filter((a) => !a.startsWith("--"));
+
+// Year
+const yearInput = positional.find((a) => /^\d{4}$/.test(a));
+
+// Day
+const dayInput = positional.find(
+  (a) => /^\d{1,2}$/.test(a) && Number(a) >= 1 && Number(a) <= 25
+);
+
+// 3. AoC jaarlogica (default afhankelijk van maand)
+const currentAocYear = (() => {
+  const now = new Date();
+  return now.getMonth() < 11
+    ? now.getFullYear() - 1 // vóór december → vorig AoC jaar
+    : now.getFullYear();
+})();
+
+const year = String(yearInput ? yearInput : currentAocYear);
+const day = dayInput ? String(dayInput) : undefined;
 
 console.log(
   `\n${chalk.red("Advent")} ${chalk.green("of")} ${chalk.red(
     "code"
-  )} ${chalk.green("solutions")}\n`
+  )} ${chalk.bold.underline.yellow(year)} ${chalk.green(
+    "solution" + (dayInput ? "" : "s")
+  )}\n`
 );
 
 async function runSolution(year: string, day?: string, benchmark = false) {
@@ -75,4 +99,4 @@ async function runSolution(year: string, day?: string, benchmark = false) {
   );
 }
 
-runSolution(yearArg, dayArg, isBenchmark);
+runSolution(year, day, isBenchmark);
