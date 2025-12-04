@@ -79,8 +79,6 @@ describe(`Day ${dayNumber} functions`, () => {
     expect(removable).toBeArrayOfSize(0);
     expect(paperMap[0][2]).toBeFalse();
   });
-
-  test("removeRolls", () => {});
 });
 
 describe(`Day ${dayNumber} example`, () => {
