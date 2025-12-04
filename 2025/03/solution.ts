@@ -27,9 +27,9 @@ const parseInput = (input: string): void => {
 };
 
 export const getJoltage = (bank: BatteryBank, batteryCount = 2): number => {
-  if (bank.length < batteryCount) return 0;
-
   if (batteryCount < 1) throw new Error("Battery count should be 1 or higher");
+
+  if (bank.length < batteryCount) return 0;
 
   if (batteryCount === 1) return Math.max(...bank);
 
