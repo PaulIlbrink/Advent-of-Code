@@ -1,6 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { isAccessible, parseInput, resetState, solve, state } from "./solution";
+import {
+  isAccessible,
+  parseInput,
+  removeRolls,
+  resetState,
+  solve,
+  state,
+} from "./solution";
 import path, { resolve } from "path";
 import { CoordinateSet } from "../../2024/06/solution";
 
@@ -17,14 +24,16 @@ describe(`Day ${dayNumber} input`, () => {
     parseInput(exampleInput);
   });
 
-  test("map dimensions", () => {
-    const { mapDimensions, paperMap } = state;
+  test("state props", () => {
+    const { mapDimensions, paperMap, rollPositions } = state;
 
     expect(mapDimensions).toBeArrayOfSize(2);
     expect(mapDimensions).toEqual([10, 10]);
 
     expect(paperMap).toBeArrayOfSize(10);
     expect(paperMap[0]).toBeArrayOfSize(10);
+
+    expect(rollPositions).toBeArrayOfSize(71);
   });
 
   test("paper rolls", () => {
@@ -54,6 +63,24 @@ describe(`Day ${dayNumber} functions`, () => {
     expect(isAccessible([0, 0], 1)).toBeFalse();
     expect(isAccessible([0, 0], 0)).toBeFalse();
   });
+
+  test("removeRolls", () => {
+    const { rollPositions, paperMap } = state;
+
+    const first4 = rollPositions.slice(0, 4);
+    expect(first4).toBeArrayOfSize(4);
+
+    expect(paperMap[0][2]).toBeTrue();
+
+    const accessible = removeRolls(first4, true);
+    expect(accessible).toBeArrayOfSize(0);
+
+    const removable = removeRolls(first4, false);
+    expect(removable).toBeArrayOfSize(0);
+    expect(paperMap[0][2]).toBeFalse();
+  });
+
+  test("removeRolls", () => {});
 });
 
 describe(`Day ${dayNumber} example`, () => {
@@ -68,6 +95,4 @@ describe(`Day ${dayNumber} example`, () => {
 
     expect(part2).toBe(43);
   });
-
-  // Add more test cases if needed
 });

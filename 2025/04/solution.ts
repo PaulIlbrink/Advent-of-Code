@@ -4,23 +4,26 @@ import type { Coordinate } from "../../2024/06/solution";
 export type State = {
   mapDimensions: Coordinate;
   paperMap: boolean[][];
+  rollPositions: Coordinate[];
 };
 
 export const state: State = {
   mapDimensions: [0, 0],
   paperMap: [],
+  rollPositions: [],
 };
 
 export const resetState = () => {
   state.paperMap.length = 0;
   state.mapDimensions = [0, 0];
+  state.rollPositions.length = 0;
 };
 
 export const parseInput = (input: string): void => {
   resetState();
   const lines = input.split("\n").map((line) => line.trim());
 
-  const { paperMap } = state;
+  const { paperMap, rollPositions } = state;
 
   lines.forEach((line, row) => {
     if (!line.length) return;
@@ -28,7 +31,10 @@ export const parseInput = (input: string): void => {
     paperMap[row] = [];
 
     for (let col = 0; col < line.length; col++) {
-      paperMap[row][col] = line.charAt(col) === "@";
+      const isPaper = line.charAt(col) === "@";
+      paperMap[row][col] = isPaper;
+
+      if (isPaper) rollPositions.push([row, col]);
     }
   });
 
@@ -69,19 +75,41 @@ export const isAccessible = (
   return true;
 };
 
-const countAccessibleRolls = (maxAdjacent = 3): number => {
+export const removeRolls = (
+  rolls: Coordinate[],
+  preserveState = false
+): Coordinate[] => {
   const { paperMap } = state;
+  const remainingRolls = rolls.filter(([row, col]) => {
+    if (!isAccessible([row, col])) return true;
 
-  let accessibleRolls = 0;
-  paperMap.forEach((line, row) => {
-    line.forEach((isPaper, col) => {
-      if (!isPaper) return;
+    if (preserveState) return false;
 
-      if (isAccessible([row, col], maxAdjacent)) accessibleRolls++;
-    });
+    paperMap[row][col] = false;
+    return false;
   });
+  return remainingRolls;
+};
 
-  return accessibleRolls;
+const countAccessibleRolls = (): number => countRemovableRolls(false);
+
+const countRemovableRolls = (multipleRounds = true): number => {
+  const { rollPositions } = state;
+
+  let totalRemoved = 0;
+
+  let remainingRolls = rollPositions;
+  let prevSize = rollPositions.length;
+  let removed = 0;
+
+  do {
+    remainingRolls = removeRolls(remainingRolls, !multipleRounds);
+    removed = prevSize - remainingRolls.length;
+    totalRemoved += removed;
+    prevSize -= removed;
+  } while (multipleRounds && removed > 0);
+
+  return totalRemoved;
 };
 
 export function solve(input: string): SolveResult {
@@ -91,12 +119,12 @@ export function solve(input: string): SolveResult {
   /* --------------------------------- Part 1 --------------------------------- */
   const part1: number = countAccessibleRolls();
   const part1fmt = chalk.underline.white(part1);
-  let description = `${part1fmt} rolls of paper can be accessed`;
+  let description = `Initially ${part1fmt} rolls of paper can be accessed`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+  const part2: number = countRemovableRolls();
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and in the end a total of ${part2fmt} rolls can be removed.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };
