@@ -9,7 +9,6 @@ import {
   state,
 } from "./solution";
 import path, { resolve } from "path";
-import { CoordinateSet } from "../../2024/06/solution";
 
 let exampleInput: string;
 const dayNumber = path.basename(__dirname);
