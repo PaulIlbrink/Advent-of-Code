@@ -129,7 +129,7 @@ export function solve(input: string): SolveResult {
   /* --------------------------------- Part 2 --------------------------------- */
   const part2: number = countFreshIngredientIds(); // not solved yet
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and there are ${part2fmt} unique fresh ingredient ID's.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };
