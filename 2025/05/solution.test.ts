@@ -1,6 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
-import { inRange, parseInput, resetState, solve, state } from "./solution";
+import {
+  countOverlap,
+  inRange,
+  isFresh,
+  parseInput,
+  resetState,
+  solve,
+  state,
+  trimOverlap,
+} from "./solution";
 import path, { resolve } from "path";
 
 let exampleInput: string;
@@ -32,10 +41,29 @@ describe(`Day ${dayNumber} input`, () => {
 
 describe(`Day ${dayNumber} functions`, () => {
   test("isFresh", () => {
-    expect(inRange(1)).toBeFalse();
-    expect(inRange(5)).toBeTrue();
-    expect(inRange(8)).toBeFalse();
-    expect(inRange(17)).toBeTrue();
+    expect(isFresh(1)).toBeFalse();
+    expect(isFresh(5)).toBeTrue();
+    expect(isFresh(8)).toBeFalse();
+    expect(isFresh(17)).toBeTrue();
+  });
+
+  test("countOverlap", () => {
+    expect(countOverlap([0, 10], [11, 20])).toBe(0);
+    expect(countOverlap([0, 10], [8, 20])).toBe(3);
+    expect(countOverlap([21, 30], [1, 100])).toBe(10);
+    expect(countOverlap([0, 10], [-4, 5])).toBe(6);
+  });
+
+  test("trimOverlap", () => {
+    expect(trimOverlap([1, 4], [5, 8])).toEqual([[5, 8]]);
+    expect(trimOverlap([1, 14], [5, 8])).toEqual([]);
+
+    expect(trimOverlap([1, 6], [5, 8])).toEqual([[7, 8]]);
+    expect(trimOverlap([20, 29], [0, 25])).toEqual([[0, 19]]);
+    expect(trimOverlap([20, 29], [1, 50])).toEqual([
+      [1, 19],
+      [30, 50],
+    ]);
   });
 });
 

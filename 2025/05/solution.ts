@@ -36,28 +36,82 @@ export const parseInput = (input: string): void => {
   });
 };
 
-export const isFresh = (ingredient: number): boolean => inRange(ingredient);
-export const inRange = (val: number): boolean => {
+export const isFresh = (ingredient: number): boolean => {
   const { ranges } = state;
-
-  return ranges.some(([min, max]) => val >= min && val <= max);
+  return ranges.some((range) => inRange(range, ingredient));
 };
+export const inRange = ([min, max]: Range, val: number): boolean =>
+  val >= min && val <= max;
 
 export const countFreshIngredients = (): number => {
   const { ingredients } = state;
 
-  return ingredients.filter((ingredient) => inRange(ingredient)).length;
+  return ingredients.filter((ingredient) => isFresh(ingredient)).length;
+};
+
+export const rangeSize = ([min, max]: Range) => {
+  return max - min + 1;
+};
+
+export const countOverlap = (
+  [minA, maxA]: Range,
+  [minB, maxB]: Range
+): number => {
+  if (minB > maxA) return 0;
+  if (maxB < minA) return 0;
+
+  if (maxB > maxA) return rangeSize([Math.max(minA, minB), maxA]);
+
+  return rangeSize([minA, Math.min(maxA, maxB)]);
+};
+
+export const trimOverlap = ([minA, maxA]: Range, rangeB: Range): Range[] => {
+  const [minB, maxB] = rangeB;
+
+  if (minB > maxA) return [rangeB];
+  if (maxB < minA) return [rangeB];
+
+  if (minB >= minA && maxB <= maxA) return [];
+
+  if (minB < minA && maxB > maxA)
+    return [
+      [minB, minA - 1],
+      [maxA + 1, maxB],
+    ];
+
+  if (minB < minA) return [[minB, minA - 1]];
+
+  return [[maxA + 1, maxB]];
 };
 
 export const countFreshIngredientIds = (): number => {
   const { ranges } = state;
 
-  const previousRanges: Range[] = [];
+  if (ranges.length === 0) return 0;
+
   let total = 0;
 
-  ranges.forEach(([min, max], idx) => {
-    // do smart stuff
-    total++;
+  let remainingRanges: Range[], trimmedRanges: Range[];
+  ranges.forEach((range, i) => {
+    if (i === 0) {
+      total += rangeSize(range);
+      return;
+    }
+
+    remainingRanges = [range];
+    for (let j = 0; j < i; j++) {
+      const earlierRange = ranges[j];
+      trimmedRanges = [];
+      remainingRanges.forEach((rem) => {
+        trimmedRanges.push(...trimOverlap(earlierRange, rem));
+      });
+      remainingRanges = trimmedRanges;
+    }
+
+    total += remainingRanges.reduce(
+      (remSize, remRange) => remSize + rangeSize(remRange),
+      0
+    );
   });
 
   return total;
