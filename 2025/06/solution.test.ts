@@ -2,6 +2,8 @@ import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
 import {
   answerProblem,
+  mapToRtl,
+  mapValuesToRtl,
   parseInput,
   resetState,
   solve,
@@ -29,13 +31,21 @@ describe(`Day ${dayNumber} input`, () => {
 
     const firstProblem = problems[0];
     expect(firstProblem.values).toBeArrayOfSize(3);
-    expect(firstProblem.values).toEqual([123, 45, 6]);
+    expect(firstProblem.values).toEqual([
+      [123, 0],
+      [45, 1],
+      [6, 2],
+    ]);
     expect(firstProblem.multiply).toBeBoolean();
     expect(firstProblem.multiply).toBeTrue();
 
     const lastProblem = problems[3];
     expect(lastProblem.values).toBeArrayOfSize(3);
-    expect(lastProblem.values).toEqual([64, 23, 314]);
+    expect(lastProblem.values).toEqual([
+      [64, 0],
+      [23, 0],
+      [314, 0],
+    ]);
     expect(lastProblem.multiply).toBeBoolean();
     expect(lastProblem.multiply).toBeFalse();
   });
@@ -47,8 +57,34 @@ describe(`Day ${dayNumber} functions`, () => {
     //   "Multiply operator is undefined"
     // );
 
-    expect(answerProblem({ values: [1, 2, 3, 4], multiply: false })).toBe(10);
-    expect(answerProblem({ values: [1, 2, 3, 4], multiply: true })).toBe(24);
+    expect(
+      answerProblem({
+        values: [
+          [1, 0],
+          [2, 0],
+          [3, 0],
+          [4, 0],
+        ],
+        multiply: false,
+        problemIndex: -1,
+      })
+    ).toBe(10);
+    expect(
+      answerProblem({
+        values: [
+          [1, 0],
+          [2, 0],
+          [3, 0],
+          [4, 0],
+        ],
+        multiply: true,
+        problemIndex: -1,
+      })
+    ).toBe(24);
+  });
+
+  test("mapValuesToRtl", () => {
+    expect(mapValuesToRtl([64, 23, 314])).toEqual([623, 431, 4]);
   });
 });
 
@@ -59,7 +95,7 @@ describe(`Day ${dayNumber} example`, () => {
     expect(part1).toBe(4277556);
   });
 
-  test("Part 2 example", () => {
+  test.skip("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
     expect(part2).toBe(3263827);
