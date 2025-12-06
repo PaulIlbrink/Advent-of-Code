@@ -29,9 +29,8 @@ export const parseInput = (input: string): void => {
 
     if (!line.trim().length) return;
 
-    const trimmedLine = line.replaceAll(/\s+/g, " ");
+    const trimmedLine = line.replaceAll(/\s+/g, " ").trim();
 
-    console.log("reverse line parsing", i, trimmedLine);
     trimmedLine.split(" ").forEach((val, j) => {
       if (i === 0) {
         operatorIndex = line.indexOf(val, operatorIndex);
@@ -41,15 +40,14 @@ export const parseInput = (input: string): void => {
           multiply: val === "*",
         };
         operatorIndex++;
-
         return;
       }
 
       const { problemIndex } = problems[j];
 
       const value = Number(val);
-      const padding = line.indexOf(String(value), problemIndex);
-      problems[j].values.push([value, padding]);
+      const padding = line.indexOf(String(value), problemIndex) - problemIndex;
+      problems[j].values.unshift([value, padding]);
     });
   }
 };
@@ -76,26 +74,30 @@ export const mapProblemToRtl = ({
   problemIndex,
 });
 
+export const indexDigitChar = (val: number, idx: number, padding = 0): string =>
+  String(val).charAt(idx - padding);
+
 export const mapValuesToRtl = (values: Value[]): Value[] => {
   if (!values.length) return values;
 
+  const [_, firstPadding] = values[0];
+
   // already mapped (padding < 0)
-  if (values[0][1] < 0) return values;
+  if (firstPadding < 0) return values;
 
   const rtlValues: Value[] = [];
 
   const maxDigits = values.reduce(
-    (max, [val]) => Math.max(max, numberOfDigits(val)),
+    (max, [val, padding]) => Math.max(max, padding + numberOfDigits(val)),
     -1
   );
 
   for (let i = 0; i < maxDigits; i++) {
-    rtlValues.push([
-      values.reduce((rtl, [val, padding]) => {
-        return rtl + Math.floor(val / Math.pow(10, i)); // TODO use padding to calculate shit
-      }, 0),
-      -1, // padding can be ignored from now on
-    ]);
+    const rtlVal = values.reduce(
+      (concat, [val, padding]) => concat + indexDigitChar(val, i, padding),
+      ""
+    );
+    rtlValues.push([Number(rtlVal), -1]);
   }
 
   return rtlValues;
@@ -121,12 +123,12 @@ export function solve(input: string): SolveResult {
   /* --------------------------------- Part 1 --------------------------------- */
   const part1: number = answerAllProblems();
   const part1fmt = chalk.underline.white(part1);
-  let description = `Part 1 result is ${part1fmt}`;
+  let description = `The grand total of all answers is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
   const part2: number = answerAllProblems(true);
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, and after applying actual Cephalopod math it is ${part2fmt}.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };
