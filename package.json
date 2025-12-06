@@ -6,6 +6,7 @@
     "start": "bun runner.ts",
     "run": "bun runner.ts",
     "watch": "bun --watch runner.ts",
+    "benchmark": "bun --benchmark runner.ts",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
