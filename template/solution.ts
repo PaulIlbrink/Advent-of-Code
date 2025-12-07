@@ -9,7 +9,7 @@ export const resetState = () => {
   // state.prop = [];
 };
 
-const parseInput = (input: string): void => {
+export const parseInput = (input: string): void => {
   resetState();
   const lines = input.split("\n").map((line) => line.trim());
 

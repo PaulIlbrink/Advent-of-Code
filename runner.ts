@@ -32,13 +32,14 @@ const currentAocYear = (() => {
 const year = String(yearInput ? yearInput : currentAocYear);
 const day = dayInput ? String(dayInput) : undefined;
 
-console.log(
-  `\n${chalk.red("Advent")} ${chalk.green("of")} ${chalk.red(
-    "code"
-  )} ${chalk.bold.underline.yellow(year)} ${chalk.green(
-    "solution" + (dayInput ? "" : "s")
-  )}\n`
-);
+let title = `${chalk.red("Advent")} ${chalk.green("of")} ${chalk.red(
+  "code"
+)} ${chalk.bold.underline.yellow(year)} ${chalk.green(
+  "solution" + (dayInput ? "" : "s")
+)}`;
+
+if (isBenchmark) title += ` | ${chalk.blue("Benchmark")}`;
+console.log(`\n${title}\n`);
 
 async function runSolution(year: string, day?: string, benchmark = false) {
   const basePath = resolve(__dirname, year);
