@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { connect } from "http2";
 
 export type Coordinate3D = [x: number, y: number, z: number];
 type JunctionDistance = {
@@ -9,19 +10,29 @@ type JunctionDistance = {
 export type JunctionBox = {
   position: Coordinate3D;
 };
-export type Circuit = JunctionBox[];
+export type Circuit = Set<JunctionBox>;
 
 export type State = {
   boxes: JunctionBox[];
   distances: JunctionDistance[];
-  circuits: Circuit[];
+  circuits: Set<Circuit>;
+  connectedBoxes: Set<JunctionBox>;
 };
-export const state: State = { boxes: [], distances: [], circuits: [] };
+export const state: State = {
+  boxes: [],
+  distances: [],
+  circuits: new Set<Circuit>(),
+  connectedBoxes: new Set<JunctionBox>(),
+};
 
-export const resetState = () => {
-  state.boxes.length = 0;
-  state.distances.length = 0;
-  state.circuits.length = 0;
+export const resetState = (soft = false) => {
+  if (!soft) {
+    state.boxes.length = 0;
+    state.distances.length = 0;
+  }
+
+  state.circuits.clear();
+  state.connectedBoxes.clear();
 };
 
 export const parseInput = (input: string): void => {
@@ -48,6 +59,10 @@ export const parseInput = (input: string): void => {
 
     boxes.push(newBox);
   });
+
+  distances.sort(({ distance: distanceA }, { distance: distanceB }) => {
+    return distanceA - distanceB;
+  });
 };
 
 export const calcDistance = (
@@ -69,19 +84,104 @@ export const sumTo = (n: number) => {
   return total;
 };
 
-export function solve(input: string): SolveResult {
+export const isOneBigCircuit = () => {
+  const { boxes, connectedBoxes, circuits } = state;
+
+  return connectedBoxes.size === boxes.length && circuits.size === 1;
+};
+
+export const connectCircuits = (max: number = 0): JunctionDistance | false => {
+  const { distances, circuits, connectedBoxes } = state;
+
+  const maxConnections = max
+    ? Math.min(distances.length, max)
+    : distances.length;
+
+  let distance;
+  for (let i = 0; i < maxConnections; i++) {
+    distance = distances[i];
+    const { boxA, boxB } = distance;
+
+    const existingCircuits = circuits
+      .values()
+      .toArray()
+      .filter((circuit) => circuit.has(boxA) || circuit.has(boxB));
+
+    if (!existingCircuits.length) {
+      circuits.add(new Set([boxA, boxB]));
+      connectedBoxes.add(boxA);
+      connectedBoxes.add(boxB);
+      continue;
+    }
+
+    if (existingCircuits.length === 2) {
+      let [circA, circB] = existingCircuits;
+      circB.values().forEach((box) => circA.add(box));
+
+      circuits.delete(circB);
+
+      if (isOneBigCircuit()) return distance;
+
+      continue;
+    }
+
+    const [existing] = existingCircuits;
+    if (!existing.has(boxA)) {
+      existing.add(boxA);
+      connectedBoxes.add(boxA);
+
+      if (isOneBigCircuit()) return distance;
+
+      continue;
+    }
+
+    existing.add(boxB);
+    connectedBoxes.add(boxB);
+
+    if (isOneBigCircuit()) return distance;
+  }
+
+  return false;
+};
+
+export const totalCircuitSize = (max = 3): number => {
+  const { circuits } = state;
+  const circArr = circuits.values().toArray();
+  circArr.sort((a, b) => b.size - a.size);
+
+  let total = circArr.slice(0, max).reduce((t, c) => t * c.size, 1);
+
+  return total;
+};
+
+export function solve(input: string, maxConnections = 1000): SolveResult {
   /* ---------------------------------- Setup --------------------------------- */
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = 0; // not solved yet
+  connectCircuits(maxConnections);
+
+  const firstN = 3;
+
+  const part1: number = totalCircuitSize(firstN);
   const part1fmt = chalk.underline.white(part1);
-  let description = `Part 1 result is ${part1fmt}`;
+  let description = `After making ${maxConnections} connections the product of the ${firstN} largest circuits is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+  resetState(true);
+
+  const success = connectCircuits();
+
+  let part2 = 0;
+  if (success) {
+    const { boxA, boxB } = success;
+    const [xA] = boxA.position;
+    const [xB] = boxB.position;
+    part2 = xA * xB;
+  }
+
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, the product of the X-coordinates of the connection that connects all boxes in one big single circuit is ${part2fmt}.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };

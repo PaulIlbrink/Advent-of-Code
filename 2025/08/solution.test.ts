@@ -30,8 +30,28 @@ describe(`Day ${dayNumber} input`, () => {
     expect(boxes).toBeArrayOfSize(20);
     expect(boxes[1]).toEqual({ position: [57, 618, 57] });
 
-    expect(distances).toBeArrayOfSize(sumTo(boxes.length - 1));
-    expect(circuits).toBeArrayOfSize(0);
+    expect(distances).toHaveLength(sumTo(boxes.length - 1));
+    expect(distances[0].distance).toBeLessThanOrEqual(distances[19].distance);
+
+    expect(circuits).toHaveLength(0);
+  });
+
+  test("softReset", () => {
+    const { connectedBoxes, circuits, boxes, distances } = state;
+
+    expect(circuits.size).toBe(0);
+    expect(connectedBoxes.size).toBeGreaterThanOrEqual(0);
+
+    solve(exampleInput, 1);
+
+    expect(circuits.size).toBe(1);
+    expect(connectedBoxes.size).toBeGreaterThanOrEqual(2);
+
+    resetState(true);
+    expect(circuits.size).toBe(0);
+    expect(connectedBoxes.size).toBeGreaterThanOrEqual(0);
+    expect(boxes).toBeArrayOfSize(20);
+    expect(distances).toHaveLength(sumTo(boxes.length - 1));
   });
 });
 
@@ -47,15 +67,15 @@ describe(`Day ${dayNumber} functions`, () => {
 });
 
 describe(`Day ${dayNumber} example`, () => {
-  test.skip("Part 1 example", () => {
-    const { part1 } = solve(exampleInput);
+  test("Part 1 example", () => {
+    const { part1 } = solve(exampleInput, 10);
 
     expect(part1).toBe(40);
   });
 
-  test.skip("Part 2 example", () => {
-    const { part2 } = solve(exampleInput);
+  test("Part 2 example", () => {
+    const { part2 } = solve(exampleInput, 0);
 
-    expect(part2).toBe(123);
+    expect(part2).toBe(25272);
   });
 });
