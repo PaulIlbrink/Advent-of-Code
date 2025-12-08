@@ -28,7 +28,7 @@ describe(`Day ${dayNumber} input`, () => {
     const { boxes, distances, circuits } = state;
 
     expect(boxes).toBeArrayOfSize(20);
-    expect(boxes[1]).toEqual({ position: [57, 618, 57] });
+    expect(boxes[1]).toEqual([57, 618, 57]);
 
     expect(distances).toHaveLength(sumTo(boxes.length - 1));
     expect(distances[0].distance).toBeLessThanOrEqual(distances[19].distance);
@@ -62,7 +62,7 @@ describe(`Day ${dayNumber} functions`, () => {
 
     const dAB = calcDistance(a, b);
 
-    expect(Math.round(dAB * 100) / 100).toBe(6.71);
+    expect(dAB).toBe(45);
   });
 });
 

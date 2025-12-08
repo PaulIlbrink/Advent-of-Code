@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { connect } from "http2";
+import { getJSDocThisTag } from "typescript";
 
 export type Coordinate3D = [x: number, y: number, z: number];
 type JunctionDistance = {
@@ -7,9 +7,8 @@ type JunctionDistance = {
   boxA: JunctionBox;
   boxB: JunctionBox;
 };
-export type JunctionBox = {
-  position: Coordinate3D;
-};
+export type JunctionBox = Coordinate3D;
+
 export type Circuit = Set<JunctionBox>;
 
 export type State = {
@@ -42,27 +41,36 @@ export const parseInput = (input: string): void => {
 
   const { boxes, distances } = state;
 
-  lines.forEach((line) => {
+  const DISTANCE_THRESHOLD = // 0.01% of the max
+    0.000_1 * calcDistance([0, 0, 0], [999_999, 999_999, 999_999]);
+
+  let skipped = 0;
+  for (const line of lines) {
     const numbers = line.split(",").map(Number);
     if (numbers.length !== 3) return;
 
     const [x, y, z] = numbers;
-    const newBox: JunctionBox = { position: [x, y, z] };
+    const newBox: JunctionBox = [x, y, z];
 
-    boxes.forEach((box) => {
-      distances.push({
-        distance: calcDistance(box.position, newBox.position),
-        boxA: box,
-        boxB: newBox,
-      });
-    });
+    for (const box of boxes) {
+      const distance = calcDistance(box, newBox);
+      if (distance < DISTANCE_THRESHOLD) {
+        distances.push({
+          distance,
+          boxA: box,
+          boxB: newBox,
+        });
+      } else {
+        skipped++;
+      }
+    }
 
     boxes.push(newBox);
-  });
+  }
 
-  distances.sort(({ distance: distanceA }, { distance: distanceB }) => {
-    return distanceA - distanceB;
-  });
+  distances.sort(
+    ({ distance: distanceA }, { distance: distanceB }) => distanceA - distanceB
+  );
 };
 
 export const calcDistance = (
@@ -73,7 +81,7 @@ export const calcDistance = (
   const dY = yA - yB;
   const dZ = zA - zB;
 
-  return Math.sqrt(dA * dA + dY * dY + dZ * dZ);
+  return dA * dA + dY * dY + dZ * dZ;
 };
 
 export const sumTo = (n: number) => {
@@ -87,10 +95,13 @@ export const sumTo = (n: number) => {
 export const isOneBigCircuit = () => {
   const { boxes, connectedBoxes, circuits } = state;
 
-  return connectedBoxes.size === boxes.length && circuits.size === 1;
+  return circuits.size === 1 && connectedBoxes.size === boxes.length;
 };
 
-export const connectCircuits = (max: number = 0): JunctionDistance | false => {
+export const connectCircuits = (
+  max = 0,
+  startAt = 0
+): JunctionDistance | false => {
   const { distances, circuits, connectedBoxes } = state;
 
   const maxConnections = max
@@ -98,7 +109,7 @@ export const connectCircuits = (max: number = 0): JunctionDistance | false => {
     : distances.length;
 
   let distance;
-  for (let i = 0; i < maxConnections; i++) {
+  for (let i = startAt; i < maxConnections; i++) {
     distance = distances[i];
     const { boxA, boxB } = distance;
 
@@ -116,7 +127,9 @@ export const connectCircuits = (max: number = 0): JunctionDistance | false => {
 
     if (existingCircuits.length === 2) {
       let [circA, circB] = existingCircuits;
-      circB.values().forEach((box) => circA.add(box));
+      for (const circ of circB.values()) {
+        circA.add(circ);
+      }
 
       circuits.delete(circB);
 
@@ -170,13 +183,13 @@ export function solve(input: string, maxConnections = 1000): SolveResult {
   /* --------------------------------- Part 2 --------------------------------- */
   resetState(true);
 
-  const success = connectCircuits();
+  const success = connectCircuits(0);
 
   let part2 = 0;
   if (success) {
     const { boxA, boxB } = success;
-    const [xA] = boxA.position;
-    const [xB] = boxB.position;
+    const [xA] = boxA;
+    const [xB] = boxB;
     part2 = xA * xB;
   }
 
