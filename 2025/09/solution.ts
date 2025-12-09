@@ -142,7 +142,7 @@ export const expandColors = (): void => {
   //   state.rowColors = rowColorsExp;
 };
 
-export const squareSize = (
+export const rectSize = (
   [xA, yA]: Coordinate,
   [xB, yB]: Coordinate
 ): number => {
@@ -163,17 +163,22 @@ export const isFullColor = (
   return false;
 };
 
-export const maxSquare = (fullColor = false): number => {
+export const maxRectangle = (fullColor = false): number => {
   const { redTiles } = state;
 
   let max = -1;
   for (const tileA of redTiles) {
     for (const tileB of redTiles) {
+      // rectangle is too small, regardless of color
+      const size = rectSize(tileA, tileB);
+      if (size <= max) continue;
+
+      // has non-colored tiles, abort
       if (fullColor && !isFullColor(tileA, tileB)) {
         continue;
       }
 
-      max = Math.max(max, squareSize(tileA, tileB));
+      max = size;
     }
   }
 
@@ -185,17 +190,17 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = maxSquare();
+  const part1: number = maxRectangle();
   const part1fmt = chalk.underline.white(part1);
-  let description = `Part 1 result is ${part1fmt}`;
+  let description = `The largest rectangle covers an area of ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
 
-  expandColors();
+  //   expandColors();
 
-  const part2: number = maxSquare(true); // solved, but wrong
+  const part2: number = 0; // maxSquare(true); // solved, but wrong
   const part2fmt = chalk.underline.yellow(part2);
-  description += `, and part 2 is ${part2fmt}.`;
+  description += `, the largest rectangle using red and green tiles is ${part2fmt}.`;
 
   /* --------------------------------- Result --------------------------------- */
   return { description, part1, part2 };

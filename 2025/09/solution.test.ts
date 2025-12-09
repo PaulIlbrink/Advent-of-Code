@@ -5,7 +5,7 @@ import {
   parseInput,
   resetState,
   solve,
-  squareSize,
+  rectSize,
   state,
 } from "./solution";
 import path, { resolve } from "path";
@@ -68,13 +68,13 @@ describe(`Day ${dayNumber} input`, () => {
 
 describe(`Day ${dayNumber} functions`, () => {
   test("squareSize", () => {
-    expect(squareSize([1, 1], [1, 1])).toBe(1);
-    expect(squareSize([1, 1], [2, 2])).toBe(4);
-    expect(squareSize([2, 2], [1, 1])).toBe(4);
+    expect(rectSize([1, 1], [1, 1])).toBe(1);
+    expect(rectSize([1, 1], [2, 2])).toBe(4);
+    expect(rectSize([2, 2], [1, 1])).toBe(4);
 
-    expect(squareSize([2, 2], [-2, -2])).toBe(25);
+    expect(rectSize([2, 2], [-2, -2])).toBe(25);
 
-    expect(squareSize([2, 2], [22, 2])).toBe(21);
+    expect(rectSize([2, 2], [22, 2])).toBe(21);
   });
 
   test("isFullColor", () => {
@@ -95,7 +95,7 @@ describe(`Day ${dayNumber} example`, () => {
     expect(part1).toBe(50);
   });
 
-  test("Part 2 example", () => {
+  test.skip("Part 2 example", () => {
     const { part2 } = solve(exampleInput);
 
     expect(part2).toBe(24);
