@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { Coordinate, CoordinateSet } from "../../2024/06/solution";
+import type { Coordinate } from "../../2024/06/solution";
 
 export type ColorRange = [start: number, end: number];
 
