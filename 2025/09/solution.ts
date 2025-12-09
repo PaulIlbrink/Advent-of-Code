@@ -1,26 +1,145 @@
 import chalk from "chalk";
-import type { Coordinate } from "../../2024/06/solution";
+import type { Coordinate, CoordinateSet } from "../../2024/06/solution";
+
+export type ColorRange = [start: number, end: number];
+
+export type ColorMap = Map<number, ColorRange[]>;
 
 export type State = {
   redTiles: Coordinate[];
+  colColors: ColorMap;
+  rowColors: ColorMap;
 };
-export const state: State = { redTiles: [] };
+export const state: State = {
+  redTiles: [],
+  colColors: new Map(),
+  rowColors: new Map(),
+};
 
 export const resetState = () => {
   state.redTiles.length = 0;
+  state.colColors.clear();
+  state.rowColors.clear();
+};
+
+export const addColorRange = (
+  [xA, yA]: Coordinate,
+  [xB, yB]: Coordinate
+): void => {
+  const { colColors, rowColors } = state;
+
+  if (xA !== xB && yA !== yB) throw new Error("Coordinates are not alligned!");
+
+  if (xA === xB) {
+    if (!colColors.has(xA)) colColors.set(xA, []);
+
+    colColors.get(xA)!.push([Math.min(yA, yB), Math.max(yA, yB)]);
+    return;
+  }
+
+  if (!rowColors.has(yA)) rowColors.set(yA, []);
+
+  rowColors.get(yA)!.push([Math.min(xA, xB), Math.max(xA, xB)]);
 };
 
 export const parseInput = (input: string): void => {
   resetState();
   const lines = input.split("\n").map((line) => line.trim());
 
-  const { redTiles } = state;
+  const { redTiles, colColors, rowColors } = state;
 
+  let prevCoord = lines[lines.length - 1].split(",").map(Number) as Coordinate;
   for (const line of lines) {
     const numbers = line.split(",").map(Number);
     if (numbers.length !== 2) continue;
-    redTiles.push(numbers as Coordinate);
+
+    const coord = numbers as Coordinate;
+
+    addColorRange(prevCoord, coord);
+
+    redTiles.push(coord);
+
+    prevCoord = coord;
   }
+};
+
+export const expandColors = (): void => {
+  return;
+
+  //   const { colColors, rowColors } = state;
+
+  //   const colIdxs = [...colColors.keys()].sort((a, b) => a - b);
+  //   const rowIdxs = [...rowColors.keys()].sort((a, b) => a - b);
+
+  //   const colIdxsInv = colIdxs.toReversed();
+  //   const rowIdxsInv = rowIdxs.toReversed();
+
+  //   const colColorsExp: ColorMap = new Map();
+  //   const rowColorsExp: ColorMap = new Map();
+
+  //   // expand columns
+  //   for (let [x, [yMin, yMax]] of colColors) {
+  //     // lower yMin
+  //     for (const y of rowIdxs) {
+  //       if (y >= yMin) break;
+
+  //       const [xMin, xMax] = rowColors.get(y)!;
+  //       // out of bounds
+  //       if (x < xMin || x > xMax) continue;
+
+  //       yMin = y;
+  //       break;
+  //     }
+
+  //     // increase yMax
+  //     for (const y of rowIdxsInv) {
+  //       if (y <= yMax) break;
+
+  //       const [xMin, xMax] = rowColors.get(y)!;
+  //       // out of bounds
+  //       if (x < xMin || x > xMax) continue;
+
+  //       yMax = y;
+  //       break;
+  //     }
+
+  //     colColorsExp.set(x, [yMin, yMax]);
+  //   }
+
+  //   // expand rows
+  //   for (let [y, [xMin, xMax]] of rowColors) {
+  //     // lower yMin
+  //     for (const x of colIdxs) {
+  //       if (x >= xMin) break;
+
+  //       const [yMin, yMax] = colColors.get(x)!;
+  //       // out of bounds
+  //       if (y < yMin || y > yMax) continue;
+
+  //       xMin = x;
+  //       break;
+  //     }
+
+  //     // increase yMax
+  //     for (const x of colIdxsInv) {
+  //       if (x <= xMax) break;
+
+  //       const [yMin, yMax] = colColors.get(x)!;
+
+  //       // out of bounds
+  //       if (y < yMin || y > yMax) {
+  //         continue;
+  //       }
+
+  //       xMax = x;
+  //       break;
+  //     }
+
+  //     rowColorsExp.set(y, [xMin, xMax]);
+  //   }
+
+  //   state.colColors = colColorsExp;
+  //   state.rowColors = rowColorsExp;
 };
 
 export const squareSize = (
@@ -30,15 +149,35 @@ export const squareSize = (
   return (Math.abs(xA - xB) + 1) * (Math.abs(yA - yB) + 1);
 };
 
-export const maxSquare = (): number => {
+export const isRangeCovered = (
+  [startA, endA]: [number, number],
+  [startB, endB]: [number, number]
+): boolean => {
+  return false;
+};
+
+export const isFullColor = (
+  [xA, yA]: Coordinate,
+  [xB, yB]: Coordinate
+): boolean => {
+  return false;
+};
+
+export const maxSquare = (fullColor = false): number => {
   const { redTiles } = state;
-  return redTiles.reduce((maxA, tileA, i) => {
-    const max = redTiles.reduce(
-      (maxB, tileB, j) => Math.max(maxB, squareSize(tileA, tileB)),
-      0
-    );
-    return Math.max(maxA, max);
-  }, 0);
+
+  let max = -1;
+  for (const tileA of redTiles) {
+    for (const tileB of redTiles) {
+      if (fullColor && !isFullColor(tileA, tileB)) {
+        continue;
+      }
+
+      max = Math.max(max, squareSize(tileA, tileB));
+    }
+  }
+
+  return max;
 };
 
 export function solve(input: string): SolveResult {
@@ -46,12 +185,15 @@ export function solve(input: string): SolveResult {
   parseInput(input);
 
   /* --------------------------------- Part 1 --------------------------------- */
-  const part1: number = maxSquare(); // not solved yet
+  const part1: number = maxSquare();
   const part1fmt = chalk.underline.white(part1);
   let description = `Part 1 result is ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
-  const part2: number = 0; // not solved yet
+
+  expandColors();
+
+  const part2: number = maxSquare(true); // solved, but wrong
   const part2fmt = chalk.underline.yellow(part2);
   description += `, and part 2 is ${part2fmt}.`;
 
