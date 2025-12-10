@@ -1,11 +1,19 @@
 import chalk from "chalk";
-import { Direction, type Coordinate } from "../../2024/06/solution";
+import { Direction } from "../../2024/06/solution";
 
-export type Edge = [start: number, end: number];
+// #region Part 1 stuff
+export type Side = [start: number, end: number, direction: Direction];
+export type Edge = [
+  start: number,
+  end: number,
+  direction: Direction,
+  incoming: Direction,
+  outgoing: Direction
+];
 
 export type EdgeMap = Map<number, Edge[]>;
 
-export type Tile = [x: number, y: number, direction?: Direction];
+export type Tile = [x: number, y: number, to?: Direction, from?: Direction];
 
 export type State = {
   redTiles: Tile[];
@@ -13,6 +21,8 @@ export type State = {
   rowEdges: EdgeMap;
   turnOffset: number;
   clockWise: boolean;
+  colEdgesExtended: EdgeMap;
+  rowEdgesExtended: EdgeMap;
 };
 export const state: State = {
   redTiles: [],
@@ -20,6 +30,8 @@ export const state: State = {
   colEdges: new Map(),
   rowEdges: new Map(),
   clockWise: false,
+  colEdgesExtended: new Map(),
+  rowEdgesExtended: new Map(),
 };
 
 export const resetState = () => {
@@ -28,21 +40,8 @@ export const resetState = () => {
   state.colEdges.clear();
   state.rowEdges.clear();
   state.clockWise = false;
-};
-
-export const addColorRange = (
-  [xA, yA]: Coordinate,
-  [xB, yB]: Coordinate
-): void => {
-  //   const {} = state;
-  //   if (xA !== xB && yA !== yB) throw new Error("Coordinates are not alligned!");
-  //   if (xA === xB) {
-  //     if (!colColors.has(xA)) colColors.set(xA, []);
-  //     colColors.get(xA)!.push([Math.min(yA, yB), Math.max(yA, yB)]);
-  //     return;
-  //   }
-  //   if (!rowColors.has(yA)) rowColors.set(yA, []);
-  //   rowColors.get(yA)!.push([Math.min(xA, xB), Math.max(xA, xB)]);
+  state.colEdgesExtended.clear();
+  state.rowEdgesExtended.clear();
 };
 
 export const rightTurns = (
@@ -54,26 +53,6 @@ export const rightTurns = (
   const change = (4 + direction - prevDirection) % 4;
 
   return ((change + 1) % 4) - 1;
-};
-
-export const addEdge = (idx: number, edge: Edge, isRow = false): void => {
-  const [start, end] = edge;
-  if (start === end)
-    throw new Error(
-      `We shouldn't have a zero-length edge? [idx, [start,end], isRow] = [${idx}, [${start}, ${end}], ${isRow}]`
-    );
-
-  const { colEdges, rowEdges } = state;
-  if (isRow) {
-    if (!rowEdges.has(idx)) rowEdges.set(idx, []);
-
-    rowEdges.get(idx)!.push(edge);
-    return;
-  }
-
-  if (!colEdges.has(idx)) colEdges.set(idx, []);
-
-  colEdges.get(idx)!.push(edge);
 };
 
 export const setDirection = (
@@ -93,8 +72,6 @@ export const setDirection = (
 
     if (!prevTile) return 0;
 
-    addEdge(x, [y, yNext]);
-
     const [_x, _y, prevDirection] = prevTile;
     return rightTurns(direction, prevDirection);
   }
@@ -106,9 +83,40 @@ export const setDirection = (
   if (!prevTile) return 0;
 
   const [_x, _y, prevDirection] = prevTile;
-  addEdge(y, [x, xNext], true);
 
   return rightTurns(direction, prevDirection);
+};
+// #endregion
+export const isHorizontal = (dir: Direction): boolean =>
+  ![Direction.N, Direction.S].includes(dir);
+
+export const addEdge = (map: EdgeMap, index: number, edge: Edge) => {
+  if (!map.has(index)) map.set(index, []);
+
+  map.get(index)?.push(edge);
+};
+
+export const initEdges = (): void => {
+  const { redTiles, colEdges, rowEdges } = state;
+
+  if (redTiles.length < 4)
+    throw new Error("Expected there to be at least 4 tiles :(");
+
+  const [[_xPrev, _yPrev, dirPrev], [x, y, dir]] = redTiles.slice(-2);
+
+  for (const tile of redTiles) {
+    const [xNext, yNext, dirNext] = tile;
+
+    if ([dirPrev, dir, dirNext].includes(undefined))
+      throw new Error("Can't init edges when directions arent all set");
+
+    if (isHorizontal(dir!)) {
+      addEdge(rowEdges, x, [y, yNext, dir!, dirPrev!, dirNext!]);
+      continue;
+    }
+
+    addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
+  }
 };
 
 export const parseInput = (input: string): void => {
@@ -191,6 +199,8 @@ export const isColorRectangle = (
   // a single line rectangle, the area is small, so unlikely to be largest, ignore for now
   if (xA === xB || yA === yB) return false;
 
+  return false;
+
   // ok, we should check all 4 sides
   const horizontal: Edge = [xA, xB];
   const vertical: Edge = [yA, yB];
@@ -236,7 +246,7 @@ export const maxRectangle = (fullColor = false): number => {
     }
   }
 
-  if (fullColor) console.log("masSize", max, "for tiles", maxA, "and", maxB);
+  //   if (fullColor) console.log("masSize", max, "for tiles", maxA, "and", maxB);
   return max;
 };
 
@@ -250,6 +260,7 @@ export function solve(input: string): SolveResult {
   let description = `The largest rectangle covers an area of ${part1fmt}`;
 
   /* --------------------------------- Part 2 --------------------------------- */
+  initEdges();
 
   const part2: number = maxRectangle(true);
   const part2fmt = chalk.underline.yellow(part2);
