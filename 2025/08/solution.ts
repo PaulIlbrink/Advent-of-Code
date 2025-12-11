@@ -47,7 +47,7 @@ export const parseInput = (input: string): void => {
   let skipped = 0;
   for (const line of lines) {
     const numbers = line.split(",").map(Number);
-    if (numbers.length !== 3) return;
+    if (numbers.length !== 3) continue;
 
     const [x, y, z] = numbers;
     const newBox: JunctionBox = [x, y, z];
