@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plot coords</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="800" height="800"></canvas>
+
+    <script>
+      // --- plak hier jouw coordinaten in ---
+      const coords = [
+        [7, 1],
+        [11, 1],
+        [11, 7],
+        [9, 7],
+        [9, 5],
+        [2, 5],
+        [2, 3],
+        [7, 3],
+        // ... en zo verder
+      ];
+
+      // ---- 1. normaliseer de coordinaten zodat ze in 800x800 canvas passen ----
+      const xs = coords.map((c) => c[0]);
+      const ys = coords.map((c) => c[1]);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      const canvas = document.getElementById("c");
+      const ctx = canvas.getContext("2d");
+
+      function scale(value, min, max, size) {
+        return ((value - min) / (max - min)) * size;
+      }
+
+      // ---- 2. tekenen ----
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+
+      coords.forEach(([x, y], i) => {
+        const sx = scale(x, minX, maxX, canvas.width);
+        const sy = scale(y, minY, maxY, canvas.height);
+
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      });
+
+      // sluit de vorm
+      ctx.closePath();
+
+      ctx.fillStyle = "green";
+      ctx.fill();
+
+      ctx.strokeStyle = "red";
+      ctx.stroke();
+    </script>
+  </body>
+</html>
