@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, it, test } from "bun:test";
 import { readFileSync } from "fs";
 import {
   isColorRectangle,
@@ -10,6 +10,8 @@ import {
   setDirection,
   type Tile,
   rightTurns,
+  isExtendable,
+  getRelativeDirection,
 } from "./solution";
 import path, { resolve } from "path";
 import { Direction } from "../../2024/06/solution";
@@ -23,6 +25,7 @@ beforeAll(() => {
 });
 
 describe(`Day ${dayNumber} functions`, () => {
+  // #region working Function tests
   test("rightTurns", () => {
     let prevDir: Direction | undefined;
 
@@ -84,6 +87,67 @@ describe(`Day ${dayNumber} functions`, () => {
     expect(rectSize([2, 2], [-2, -2])).toBe(25);
 
     expect(rectSize([2, 2], [22, 2])).toBe(21);
+  });
+  // #endregion
+
+  test("getRelativeDirection", () => {
+    expect(getRelativeDirection(Direction.N, Direction.N)).toBe(Direction.N);
+  });
+
+  test("isExtendable", () => {
+    expect(isExtendable).toBeFunction();
+
+    expect(state.clockWise).toBeFalse();
+
+    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.W)).toBeTrue();
+
+    // Direction.E
+    expect(isExtendable(Direction.N, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.N)).toBeTrue();
+
+    // Direction.W
+    expect(isExtendable(Direction.N, Direction.W)).toBeFalse();
+    expect(isExtendable(Direction.W, Direction.S)).toBeFalse();
+    expect(isExtendable(Direction.S, Direction.E)).toBeFalse();
+    expect(isExtendable(Direction.E, Direction.N)).toBeFalse();
+
+    // Direction.S
+    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
+
+    state.clockWise = true;
+    expect(state.clockWise).toBeTrue();
+
+    // Direction.N
+    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.W)).toBeTrue();
+
+    // Direction.E
+    expect(isExtendable(Direction.N, Direction.E)).toBeFalse();
+    expect(isExtendable(Direction.E, Direction.S)).toBeFalse();
+    expect(isExtendable(Direction.S, Direction.W)).toBeFalse();
+    expect(isExtendable(Direction.W, Direction.N)).toBeFalse();
+
+    // Direction.W
+    expect(isExtendable(Direction.N, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.N)).toBeTrue();
+
+    // Direction.S
+    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
   });
 });
 

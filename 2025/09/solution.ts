@@ -8,7 +8,9 @@ export type Edge = [
   end: number,
   direction: Direction,
   incoming: Direction,
-  outgoing: Direction
+  outgoing: Direction,
+  startExt?: number,
+  endExt?: number
 ];
 
 export type EdgeMap = Map<number, Edge[]>;
@@ -21,8 +23,6 @@ export type State = {
   rowEdges: EdgeMap;
   turnOffset: number;
   clockWise: boolean;
-  colEdgesExtended: EdgeMap;
-  rowEdgesExtended: EdgeMap;
 };
 export const state: State = {
   redTiles: [],
@@ -30,8 +30,6 @@ export const state: State = {
   colEdges: new Map(),
   rowEdges: new Map(),
   clockWise: false,
-  colEdgesExtended: new Map(),
-  rowEdgesExtended: new Map(),
 };
 
 export const resetState = () => {
@@ -40,8 +38,6 @@ export const resetState = () => {
   state.colEdges.clear();
   state.rowEdges.clear();
   state.clockWise = false;
-  state.colEdgesExtended.clear();
-  state.rowEdgesExtended.clear();
 };
 
 export const rightTurns = (
@@ -96,13 +92,30 @@ export const addEdge = (map: EdgeMap, index: number, edge: Edge) => {
   map.get(index)?.push(edge);
 };
 
+export const getRelativeDirection = (
+  dirA: Direction,
+  dirB: Direction
+): Direction => ((4 + dirB - dirA) % 4) + 1;
+
+export const isExtendable = (dirA: Direction, dirB: Direction): boolean => {
+  const { clockWise } = state;
+
+  const dirRel = getRelativeDirection(dirA, dirB);
+
+  if (clockWise) return dirRel !== Direction.E;
+
+  return dirRel !== Direction.W;
+};
+
+export const extendEdge = (edge: Edge) => {};
+
 export const initEdges = (): void => {
   const { redTiles, colEdges, rowEdges } = state;
 
   if (redTiles.length < 4)
     throw new Error("Expected there to be at least 4 tiles :(");
 
-  const [[_xPrev, _yPrev, dirPrev], [x, y, dir]] = redTiles.slice(-2);
+  let [[_xPrev, _yPrev, dirPrev], [x, y, dir]] = redTiles.slice(-2);
 
   for (const tile of redTiles) {
     const [xNext, yNext, dirNext] = tile;
@@ -110,13 +123,21 @@ export const initEdges = (): void => {
     if ([dirPrev, dir, dirNext].includes(undefined))
       throw new Error("Can't init edges when directions arent all set");
 
-    if (isHorizontal(dir!)) {
+    if (isHorizontal(dir!))
       addEdge(rowEdges, x, [y, yNext, dir!, dirPrev!, dirNext!]);
-      continue;
-    }
+    else addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
 
-    addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
+    _xPrev = x;
+    _yPrev = y;
+    dirPrev = dir;
+
+    x = xNext;
+    y = yNext;
+    dir = dirNext;
   }
+
+  // extend edges
+  for (const edge of rowEdges.values().toArray().flat()) extendEdge(edge);
 };
 
 export const parseInput = (input: string): void => {
@@ -200,28 +221,6 @@ export const isColorRectangle = (
   if (xA === xB || yA === yB) return false;
 
   return false;
-
-  // ok, we should check all 4 sides
-  const horizontal: Edge = [xA, xB];
-  const vertical: Edge = [yA, yB];
-
-  const topIdx = Math.max(yA, yB);
-  const bottomIdx = Math.min(yA, yB);
-  const leftIdx = Math.min(xA, xB);
-  const rightIdx = Math.max(xA, xB);
-
-  const topOk = isSideColored(topIdx, horizontal, true);
-  const bottomOk = isSideColored(bottomIdx, horizontal, true);
-  const leftOk = isSideColored(leftIdx, vertical, true);
-  const rightOk = isSideColored(rightIdx, vertical, true);
-
-  const sidesOk = [topOk, rightOk, bottomOk, leftOk];
-
-  const totalOk = sidesOk.length;
-
-  return totalOk >= 2;
-
-  //   return false;
 };
 
 export const maxRectangle = (fullColor = false): number => {
