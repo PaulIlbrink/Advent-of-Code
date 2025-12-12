@@ -10,6 +10,7 @@ import {
   setDirection,
   type Tile,
   rightTurns,
+  isExtendable,
 } from "./solution";
 import path, { resolve } from "path";
 import { Direction } from "../../2024/06/solution";
@@ -23,6 +24,7 @@ beforeAll(() => {
 });
 
 describe(`Day ${dayNumber} functions`, () => {
+  //#region Working function tests
   test("rightTurns", () => {
     let prevDir: Direction | undefined;
 
@@ -85,9 +87,47 @@ describe(`Day ${dayNumber} functions`, () => {
 
     expect(rectSize([2, 2], [22, 2])).toBe(21);
   });
+  //#endregion
+
+  test("isExtendable", () => {
+    expect(isExtendable).toBeFunction();
+
+    let { clockWise } = state;
+    expect(clockWise).toBeFalse();
+
+    expect(isExtendable(Direction.N, Direction.W)).toBeFalse();
+    expect(isExtendable(Direction.N, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+
+    expect(isExtendable(Direction.E, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.E, Direction.N)).toBeFalse();
+
+    expect(isExtendable(Direction.S, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.E)).toBeFalse();
+    expect(isExtendable(Direction.S, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
+
+    expect(isExtendable(Direction.W, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
+    expect(isExtendable(Direction.W, Direction.S)).toBeFalse();
+    expect(isExtendable(Direction.W, Direction.N)).toBeTrue();
+
+    state.clockWise = !clockWise;
+    ({ clockWise } = state);
+    expect(clockWise).toBeTrue();
+
+    expect(isExtendable(Direction.N, Direction.W)).toBeTrue();
+    expect(isExtendable(Direction.N, Direction.E)).toBeFalse();
+    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+  });
 });
 
 describe(`Day ${dayNumber} input`, () => {
+  // #region Working input tests
   test("turnOffset", () => {
     resetState();
 
@@ -161,6 +201,7 @@ describe(`Day ${dayNumber} input`, () => {
     );
     expect(missingDirections).toBeFalse();
   });
+  // #endregion
 
   test.skip("edges", () => {
     parseInput(exampleInput);

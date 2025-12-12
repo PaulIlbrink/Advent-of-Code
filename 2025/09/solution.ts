@@ -8,7 +8,9 @@ export type Edge = [
   end: number,
   direction: Direction,
   incoming: Direction,
-  outgoing: Direction
+  outgoing: Direction,
+  startExtended?: number,
+  endExtended?: number
 ];
 
 export type EdgeMap = Map<number, Edge[]>;
@@ -117,6 +119,40 @@ export const initEdges = (): void => {
 
     addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
   }
+
+  // We have all edges, now try and extend them
+  for (const edge of colEdges.values().toArray().flat()) extendEdge(edge);
+  //   for (const edge of rowEdges.values()) extendEdge(edge);
+};
+
+export const isExtendable = (dirA: Direction, dirB: Direction): boolean => {
+  const { clockWise } = state;
+
+  const turns = (4 + dirB - dirA) % 4; // 3 = left, 1 == right
+
+  if (clockWise) return turns !== 1; // except right
+
+  return turns !== 3; // except left
+};
+
+export const extendEdge = (edge: Edge, map: EdgeMap): void => {
+  const [start, end, direction, incoming, outgoing] = edge;
+
+  let startExtended = start;
+  let endExtended = end;
+
+  // extend start
+  if (isExtendable(incoming, direction)) {
+    // console.log("extending start is possible");
+  }
+
+  // extend end
+  if (isExtendable(direction, outgoing)) {
+    // console.log("extending end is possible");
+  }
+
+  edge[5] = startExtended;
+  edge[6] = endExtended;
 };
 
 export const parseInput = (input: string): void => {
@@ -186,8 +222,6 @@ export const isSideColored = (
       Math.max(start, end) <= Math.max(startE, endE)
   );
   return fullyCovered;
-
-  return false;
 };
 
 export const isColorRectangle = (
