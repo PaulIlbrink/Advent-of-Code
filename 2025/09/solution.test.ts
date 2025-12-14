@@ -92,9 +92,29 @@ describe(`Day ${dayNumber} functions`, () => {
 
   test("getRelativeDirection", () => {
     expect(getRelativeDirection(Direction.N, Direction.N)).toBe(Direction.N);
+    expect(getRelativeDirection(Direction.N, Direction.E)).toBe(Direction.E);
+    expect(getRelativeDirection(Direction.N, Direction.S)).toBe(Direction.S);
+    expect(getRelativeDirection(Direction.N, Direction.W)).toBe(Direction.W);
+
+    expect(getRelativeDirection(Direction.E, Direction.N)).toBe(Direction.W);
+    expect(getRelativeDirection(Direction.E, Direction.E)).toBe(Direction.N);
+    expect(getRelativeDirection(Direction.E, Direction.S)).toBe(Direction.E);
+    expect(getRelativeDirection(Direction.E, Direction.W)).toBe(Direction.S);
+
+    expect(getRelativeDirection(Direction.S, Direction.N)).toBe(Direction.S);
+    expect(getRelativeDirection(Direction.S, Direction.E)).toBe(Direction.W);
+    expect(getRelativeDirection(Direction.S, Direction.S)).toBe(Direction.N);
+    expect(getRelativeDirection(Direction.S, Direction.W)).toBe(Direction.E);
+
+    expect(getRelativeDirection(Direction.W, Direction.N)).toBe(Direction.E);
+    expect(getRelativeDirection(Direction.W, Direction.E)).toBe(Direction.S);
+    expect(getRelativeDirection(Direction.W, Direction.S)).toBe(Direction.W);
+    expect(getRelativeDirection(Direction.W, Direction.W)).toBe(Direction.N);
   });
 
   test("isExtendable", () => {
+    resetState();
+
     expect(isExtendable).toBeFunction();
 
     expect(state.clockWise).toBeFalse();
@@ -151,41 +171,41 @@ describe(`Day ${dayNumber} functions`, () => {
   });
   //#endregion
 
-  test("isExtendable", () => {
-    expect(isExtendable).toBeFunction();
+  //   test("isExtendable", () => {
+  //     expect(isExtendable).toBeFunction();
 
-    let { clockWise } = state;
-    expect(clockWise).toBeFalse();
+  //     let { clockWise } = state;
+  //     expect(clockWise).toBeFalse();
 
-    expect(isExtendable(Direction.N, Direction.W)).toBeFalse();
-    expect(isExtendable(Direction.N, Direction.E)).toBeTrue();
-    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
-    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+  //     expect(isExtendable(Direction.N, Direction.W)).toBeFalse();
+  //     expect(isExtendable(Direction.N, Direction.E)).toBeTrue();
+  //     expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+  //     expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
 
-    expect(isExtendable(Direction.E, Direction.W)).toBeTrue();
-    expect(isExtendable(Direction.E, Direction.E)).toBeTrue();
-    expect(isExtendable(Direction.E, Direction.S)).toBeTrue();
-    expect(isExtendable(Direction.E, Direction.N)).toBeFalse();
+  //     expect(isExtendable(Direction.E, Direction.W)).toBeTrue();
+  //     expect(isExtendable(Direction.E, Direction.E)).toBeTrue();
+  //     expect(isExtendable(Direction.E, Direction.S)).toBeTrue();
+  //     expect(isExtendable(Direction.E, Direction.N)).toBeFalse();
 
-    expect(isExtendable(Direction.S, Direction.W)).toBeTrue();
-    expect(isExtendable(Direction.S, Direction.E)).toBeFalse();
-    expect(isExtendable(Direction.S, Direction.S)).toBeTrue();
-    expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
+  //     expect(isExtendable(Direction.S, Direction.W)).toBeTrue();
+  //     expect(isExtendable(Direction.S, Direction.E)).toBeFalse();
+  //     expect(isExtendable(Direction.S, Direction.S)).toBeTrue();
+  //     expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
 
-    expect(isExtendable(Direction.W, Direction.W)).toBeTrue();
-    expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
-    expect(isExtendable(Direction.W, Direction.S)).toBeFalse();
-    expect(isExtendable(Direction.W, Direction.N)).toBeTrue();
+  //     expect(isExtendable(Direction.W, Direction.W)).toBeTrue();
+  //     expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
+  //     expect(isExtendable(Direction.W, Direction.S)).toBeFalse();
+  //     expect(isExtendable(Direction.W, Direction.N)).toBeTrue();
 
-    state.clockWise = !clockWise;
-    ({ clockWise } = state);
-    expect(clockWise).toBeTrue();
+  //     state.clockWise = !clockWise;
+  //     ({ clockWise } = state);
+  //     expect(clockWise).toBeTrue();
 
-    expect(isExtendable(Direction.N, Direction.W)).toBeTrue();
-    expect(isExtendable(Direction.N, Direction.E)).toBeFalse();
-    expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
-    expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
-  });
+  //     expect(isExtendable(Direction.N, Direction.W)).toBeTrue();
+  //     expect(isExtendable(Direction.N, Direction.E)).toBeFalse();
+  //     expect(isExtendable(Direction.N, Direction.S)).toBeTrue();
+  //     expect(isExtendable(Direction.N, Direction.N)).toBeTrue();
+  //   });
 });
 
 describe(`Day ${dayNumber} input`, () => {

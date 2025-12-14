@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Direction } from "../../2024/06/solution";
+import { dir } from "console";
 
 // #region Part 1 stuff
 export type Side = [start: number, end: number, direction: Direction];
@@ -40,15 +41,21 @@ export const resetState = () => {
   state.clockWise = false;
 };
 
+export const getRelativeDirection = (
+  dirA: Direction,
+  dirB: Direction
+): Direction => ((4 + dirB - dirA) % 4) + 1;
+
 export const rightTurns = (
   direction: Direction,
   prevDirection?: Direction
 ): number => {
   if (!prevDirection) return 0;
 
-  const change = (4 + direction - prevDirection) % 4;
+  const relative = getRelativeDirection(prevDirection, direction);
+  if (relative === Direction.W) return -1;
 
-  return ((change + 1) % 4) - 1;
+  return relative - 1;
 };
 
 export const setDirection = (
@@ -91,11 +98,6 @@ export const addEdge = (map: EdgeMap, index: number, edge: Edge) => {
 
   map.get(index)?.push(edge);
 };
-
-export const getRelativeDirection = (
-  dirA: Direction,
-  dirB: Direction
-): Direction => ((4 + dirB - dirA) % 4) + 1;
 
 export const initEdges = (): void => {
   const { redTiles, colEdges, rowEdges } = state;
