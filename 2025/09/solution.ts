@@ -97,18 +97,6 @@ export const getRelativeDirection = (
   dirB: Direction
 ): Direction => ((4 + dirB - dirA) % 4) + 1;
 
-export const isExtendable = (dirA: Direction, dirB: Direction): boolean => {
-  const { clockWise } = state;
-
-  const dirRel = getRelativeDirection(dirA, dirB);
-
-  if (clockWise) return dirRel !== Direction.E;
-
-  return dirRel !== Direction.W;
-};
-
-export const extendEdge = (edge: Edge) => {};
-
 export const initEdges = (): void => {
   const { redTiles, colEdges, rowEdges } = state;
 
@@ -127,8 +115,8 @@ export const initEdges = (): void => {
       addEdge(rowEdges, x, [y, yNext, dir!, dirPrev!, dirNext!]);
     else addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
 
-    _xPrev = x;
-    _yPrev = y;
+    // _xPrev = x;
+    // _yPrev = y;
     dirPrev = dir;
 
     x = xNext;
@@ -136,8 +124,38 @@ export const initEdges = (): void => {
     dir = dirNext;
   }
 
-  // extend edges
-  for (const edge of rowEdges.values().toArray().flat()) extendEdge(edge);
+  // We have all edges, now try and extend them
+  for (const edge of colEdges.values().toArray().flat()) extendEdge(edge);
+};
+
+export const isExtendable = (dirA: Direction, dirB: Direction): boolean => {
+  const { clockWise } = state;
+
+  const dirRel = getRelativeDirection(dirA, dirB);
+
+  if (clockWise) return dirRel !== Direction.E;
+
+  return dirRel !== Direction.W;
+};
+
+export const extendEdge = (edge: Edge): void => {
+  const [start, end, direction, incoming, outgoing] = edge;
+
+  let startExtended = start;
+  let endExtended = end;
+
+  // extend start
+  if (isExtendable(incoming, direction)) {
+    // console.log("extending start is possible");
+  }
+
+  // extend end
+  if (isExtendable(direction, outgoing)) {
+    // console.log("extending end is possible");
+  }
+
+  edge[5] = startExtended;
+  edge[6] = endExtended;
 };
 
 export const parseInput = (input: string): void => {
@@ -207,8 +225,6 @@ export const isSideColored = (
       Math.max(start, end) <= Math.max(startE, endE)
   );
   return fullyCovered;
-
-  return false;
 };
 
 export const isColorRectangle = (
