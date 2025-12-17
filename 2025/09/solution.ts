@@ -114,8 +114,8 @@ export const initEdges = (): void => {
       throw new Error("Can't init edges when directions arent all set");
 
     if (isHorizontal(dir!))
-      addEdge(rowEdges, x, [y, yNext, dir!, dirPrev!, dirNext!]);
-    else addEdge(colEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
+      addEdge(rowEdges, y, [x, xNext, dir!, dirPrev!, dirNext!]);
+    else addEdge(colEdges, x, [y, yNext, dir!, dirPrev!, dirNext!]);
 
     // _xPrev = x;
     // _yPrev = y;
@@ -125,9 +125,14 @@ export const initEdges = (): void => {
     y = yNext;
     dir = dirNext;
   }
+};
+
+export const extendEdges = () => {
+  const { colEdges, rowEdges } = state;
 
   // We have all edges, now try and extend them
   for (const edge of colEdges.values().toArray().flat()) extendEdge(edge);
+  for (const edge of rowEdges.values().toArray().flat()) extendEdge(edge);
 };
 
 export const isExtendable = (dirA: Direction, dirB: Direction): boolean => {
@@ -149,11 +154,13 @@ export const extendEdge = (edge: Edge): void => {
   // extend start
   if (isExtendable(incoming, direction)) {
     // console.log("extending start is possible");
+    startExtended = -1;
   }
 
   // extend end
   if (isExtendable(direction, outgoing)) {
     // console.log("extending end is possible");
+    startExtended = 9999;
   }
 
   edge[5] = startExtended;
@@ -278,6 +285,7 @@ export function solve(input: string): SolveResult {
 
   /* --------------------------------- Part 2 --------------------------------- */
   initEdges();
+  extendEdges();
 
   const part2: number = maxRectangle(true);
   const part2fmt = chalk.underline.yellow(part2);

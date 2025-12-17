@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, test } from "bun:test";
-import { readFileSync } from "fs";
+import { Dir, readFileSync } from "fs";
 import {
   isColorRectangle,
   parseInput,
@@ -12,6 +12,8 @@ import {
   rightTurns,
   isExtendable,
   getRelativeDirection,
+  initEdges,
+  extendEdges,
 } from "./solution";
 import path, { resolve } from "path";
 import { Direction } from "../../2024/06/solution";
@@ -24,8 +26,8 @@ beforeAll(() => {
   resetState();
 });
 
+//#region Working tests
 describe(`Day ${dayNumber} functions`, () => {
-  //#region Working function tests
   test("rightTurns", () => {
     let prevDir: Direction | undefined;
 
@@ -88,7 +90,6 @@ describe(`Day ${dayNumber} functions`, () => {
 
     expect(rectSize([2, 2], [22, 2])).toBe(21);
   });
-  // #endregion
 
   test("getRelativeDirection", () => {
     expect(getRelativeDirection(Direction.N, Direction.N)).toBe(Direction.N);
@@ -170,11 +171,9 @@ describe(`Day ${dayNumber} functions`, () => {
     expect(isExtendable(Direction.S, Direction.N)).toBeTrue();
     expect(isExtendable(Direction.W, Direction.E)).toBeTrue();
   });
-  //#endregion
 });
 
 describe(`Day ${dayNumber} input`, () => {
-  // #region Working input tests
   test("turnOffset", () => {
     resetState();
 
@@ -250,7 +249,7 @@ describe(`Day ${dayNumber} input`, () => {
   });
   // #endregion
 
-  test.skip("edges", () => {
+  test("edges", () => {
     parseInput(exampleInput);
 
     const { colEdges, rowEdges } = state;
@@ -258,7 +257,7 @@ describe(`Day ${dayNumber} input`, () => {
     expect(colEdges).toBeEmpty();
     expect(rowEdges).toBeEmpty();
 
-    parseInput(exampleInput);
+    initEdges();
 
     expect(colEdges).not.toBeEmpty();
     expect(rowEdges).not.toBeEmpty();
@@ -273,28 +272,82 @@ describe(`Day ${dayNumber} input`, () => {
 
     expect(colEdges.has(2)).toBeTrue();
 
-    const colEdge2 = colEdges.get(2)!;
-    expect(colEdge2).toBeArrayOfSize(1);
-    expect(colEdge2.at(0)).toBeArray();
-    // expect(colEdge2.at(0)).toEqual([5, 3]);
-    expect(colEdge2.at(0)).not.toEqual([3, 5]);
+    const colEdgesAt2 = colEdges.get(2)!;
+    expect(colEdgesAt2).toBeArrayOfSize(1);
+
+    let [start, end, dir, incoming, outgoing, startExt, endExt] =
+      colEdgesAt2.at(0)!;
+    expect([start, end, dir, incoming, outgoing, startExt, endExt]).toEqual([
+      5,
+      3,
+      Direction.S,
+      Direction.W,
+      Direction.E,
+      undefined,
+      undefined,
+    ]);
 
     expect(colEdges.get(4)).toBeUndefined();
 
     const rowKeys = rowEdges.keys();
     expect(new Set(rowKeys)).toEqual(new Set([1, 3, 5, 7]));
 
-    // expect(rowEdges).toHaveLength(4);
-    // expect(rowEdges.has(0)).toBeFalse();
+    expect(rowEdges).toHaveLength(4);
+    expect(rowEdges.has(0)).toBeFalse();
 
-    // expect(rowEdges.has(1)).toBeTrue();
-    // expect(rowEdges.get(1)?.at(0)).toEqual([7, 11]);
-    // expect(rowEdges.get(1)?.at(0)).not.toEqual([11, 7]);
+    expect(rowEdges.has(1)).toBeTrue();
+    expect(rowEdges.get(1)).toBeArrayOfSize(1);
 
-    // expect(rowEdges.get(3)?.at(0)).toEqual([2, 7]);
-    // expect(rowEdges.get(3)?.at(0)).not.toEqual([7, 2]);
+    [start, end, dir, incoming, outgoing, startExt, endExt] = rowEdges
+      .get(1)!
+      .at(0)!;
+    expect([start, end]).not.toEqual([11, 7]);
+    expect([start, end]).toEqual([7, 11]);
+    expect([start, end, dir, incoming, outgoing]).toEqual([
+      7,
+      11,
+      Direction.E,
+      Direction.S,
+      Direction.N,
+    ]);
+    expect([start, end, dir, incoming, outgoing, startExt, endExt]).toEqual([
+      7,
+      11,
+      Direction.E,
+      Direction.S,
+      Direction.N,
+      undefined,
+      undefined,
+    ]);
 
-    // expect(rowEdges.get(4)).toBeUndefined();
+    [start, end, dir, incoming, outgoing] = rowEdges.get(3)!.at(0)!;
+    expect([start, end]).toEqual([2, 7]);
+    expect([start, end]).not.toEqual([7, 2]);
+
+    expect(rowEdges.get(4)).toBeUndefined();
+  });
+
+  test("extended edges", () => {
+    parseInput(exampleInput);
+    initEdges();
+    extendEdges();
+
+    const { colEdges } = state;
+
+    const col2 = colEdges.get(7);
+    expect(col2).toBeArrayOfSize(1);
+
+    const lastEdge = col2?.at(0)!;
+    let [start, end, dir, incoming, outgoing, startExt, endExt] = lastEdge;
+
+    expect([start, end, dir]).toEqual([3, 1, Direction.S]);
+
+    expect(endExt).toBeDefined();
+    expect(end).toBe(endExt!);
+
+    expect(startExt).toBeDefined();
+    expect(startExt).not.toBe(start);
+    expect(startExt).toBe(5);
   });
 
   describe("input based functions", () => {
